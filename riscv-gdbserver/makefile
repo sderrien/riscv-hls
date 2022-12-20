@@ -22,14 +22,14 @@ $(BINDIR)/gdb-server-uart : gdb-server.cpp gdb-target-uart.cpp gdb-target-common
 	g++ $(CFLAGS) -g -O0 -o $@ $^
 	
 
-$(BINDIR)/uart_client-pipe: uart_client.cpp gdb-target-pipe.cpp gdb-target-common.cpp
-	g++ $(CFLAGS) -g -O0 -o $@ $^
-
-$(BINDIR)/uart_client-uart: uart_client.cpp gdb-target-uart.cpp gdb-target-common.cpp
-	g++ $(CFLAGS) -g -O0 -o $@ $^
-
-$(BINDIR)/uart_test: uart_test.cpp 
-	g++ $(CFLAGS) -g -O0 -o $@ $^
+#$(BINDIR)/uart_client-pipe: uart_client.cpp gdb-target-pipe.cpp gdb-target-common.cpp
+#	g++ $(CFLAGS) -g -O0 -o $@ $^
+#
+#$(BINDIR)/uart_client-uart: uart_client.cpp gdb-target-uart.cpp gdb-target-common.cpp
+#	g++ $(CFLAGS) -g -O0 -o $@ $^
+#
+#$(BINDIR)/uart_test: uart_test.cpp 
+#	g++ $(CFLAGS) -g -O0 -o $@ $^
 
 clean:
 	rm  $(PROGS)
