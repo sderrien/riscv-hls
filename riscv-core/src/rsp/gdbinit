@@ -1,5 +1,0 @@
-define init_riscv
-    detach
-    target remote :1234
-    load $arg0
-end
