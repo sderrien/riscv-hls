@@ -38,7 +38,8 @@ struct decode_info decode(unsigned int ir) {
 	}
 }
 
-#ifndef SYNTHESIS
+#ifndef __SYNTHESIS__
+
 char buffer[256];
 
 char *regnames[32] = { "zero", "ra", "sp", "gp", "tp", "t0", "t1", "t2",

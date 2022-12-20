@@ -77,30 +77,25 @@ bool init_device(char *device) {
 }
 
 
-unsigned int hasbyte = 0;
-
-
-
 bool has_byte() {
 	int bytes;
 	ioctl(tty, FIONREAD, &bytes);
 	return bytes>1;
 }
 
-int cpt = 1;
-
-// int bytes;
-// ioctl(fd, FIONREAD, &bytes);
-
 int read_byte() {
 	unsigned char c;
 	do {
-		hasbyte = (read(tty, &c, sizeof(char))==1) ;
+		int hasbyte = (read(tty, &c, sizeof(char))==1) ;
+		if (hasbyte<0) {
+			fprintf(stderr,"Error tty\n");
+			exit(-1);
+		}
 		trace_in(c);
 		if ((c&0x80)==0) {
 			return c;
 		} else {
-			printf("%c",c);
+			printf("stdout: %c",c);
 		}
 	} while(1);
 }

@@ -104,12 +104,17 @@ int cpu_load(uint32_t addr) {
 }
 
 void cpu_store(uint32_t addr,uint8_t data) {
+	if (addr < (MEMSIZE)) {
+
 	memw[addr]=data;
 	switch (addr%4) {
 		case 0: mem0[addr32(addr)]= data; break;
 		case 1: mem1[addr32(addr)]= data; break;
 		case 2: mem2[addr32(addr)]= data; break;
 		case 3: mem3[addr32(addr)]= data; break;
+	}
+	} else {
+		PRINTF("Out of bound [%08X]\n",addr);
 	}
 //	PRINTF("[%08X]=%02X ; {%02X,%02X,%02X,%02X}\n",addr,data,
 //			mem0[addr32(addr)],
@@ -183,21 +188,6 @@ int remove_hw_bkpt(uint32_t addr) {
 	}
 	return 0;
 }
-
-//int read_csr(uint16_t addr) {
-//	switch (addr) {
-//		case RISCV_CSR_MTVEC:
-//			return mtvec;
-//			break;
-//		default:
-//			break;
-//	}
-//}
-//
-//csr[RISCV_CSR_MEPC] = pc;
-//		next_pc = csr[RISCV_CSR_MTVEC];
-//int write_csr(uint16_t addr,uint32_t data) {
-//}
 
 uint32_t cpu_step(bool irq) {
 
@@ -698,20 +688,6 @@ int cpu_info(uint8_t id) {
 	return 0xDEADBEEF;
 }
 
-//int cpu_run() {
-//	uint32_t pc;
-//	u_int32_t cpt = 0;
-//	bool irq = false;
-//	do {
-//		pc = cpu_step(irq);
-//		if (match_hbkpt(pc)) {
-//			return pc;
-//		}
-//		if (halted) {
-//			return pc;
-//		}
-//	} while (1);
-//}
 
 #pragma toplevel
 int riscv(volatile unsigned int *leds, volatile unsigned int *dbg_pc,
@@ -739,41 +715,4 @@ int riscv(volatile unsigned int *leds, volatile unsigned int *dbg_pc,
 
 }
 
-#ifndef __SYNTHESIS__
-int loadbinary(char *filename) {
-	int i;
-	FILE *f;
-	char buffer[16];
-	f = fopen(filename, "r");
-	i = 0;
-	if (f != NULL) {
-		while (!feof(f) && i < (MEMSIZE)) {
-			fread(buffer, 4, 1, f);
-			mem0[i / 4] = buffer[0];
-			mem1[i / 4] = buffer[1];
-			mem2[i / 4] = buffer[2];
-			mem3[i / 4] = buffer[3];
-			i += 4;
-		}
-		fclose(f);
-		return i;
-	} else {
-		fprintf(stderr, "Could not open %s\n", filename);
-		return -1;
-	}
-}
-#endif
 
-#ifdef MAIN
-int main(int argc, char **argv) {
-	unsigned int leds;
-	unsigned int pc;
-	unsigned int ir;
-
-#ifndef __SYNTHESIS__
-	loadbinary(argv[1]);
-#endif
-	riscv(&leds, &pc,&ir,iomap);
-	return 0;
-}
-#endif
