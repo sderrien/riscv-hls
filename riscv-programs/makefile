@@ -5,7 +5,7 @@ OBJS= crt.o $(PROG).o
 #	  chipsupport.o \
 #	  boardsupport.o \
 
-CC=riscv32-unknown-elf-gcc -march=rv32i_zicsr -O0
+CC=riscv32-unknown-elf-gcc 
 
 INCLUDES=../riscv-core/src/
 
@@ -26,6 +26,7 @@ $(PROG).o : $(PROG).c
 	$(CC) -c -g -o $(PROG).o $(PROG).c 
 
 ../bin/genrom: utils/genrom.cpp ../riscv-core/src/asm.cpp
+	-mkdir ../bin/ 
 	g++ -I$(INCLUDES) -Wno-write-strings -o $@ $^  	
 
 chipsupport.o : chipsupport.c

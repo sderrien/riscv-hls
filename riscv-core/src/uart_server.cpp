@@ -14,16 +14,13 @@
 #include <unistd.h>
 #endif
 
-#include <gdb-target.h>
-#include "rvi32.h"
-
 
 #ifdef __SYNTHESIS__
 
-#define FFLUSH(...) 0
-#define PRINTF(...) 0
-#define FPRINTF(...) 0
-#define EXIT(a) 0
+#define FFLUSH(...)
+#define PRINTF(...)
+#define FPRINTF(...)
+#define EXIT(a)
 
 #else
 
@@ -33,6 +30,10 @@
 #define FPRINTF(...) fprintf( __VA_ARGS__)
 
 #endif
+
+
+#include <gdb-target.h>
+#include <rvi32.h>
 
 #ifndef __SYNTHESIS__
 
@@ -101,15 +102,12 @@ int read_byte(volatile unsigned int *uart) {
 #endif
 }
 
-
+#define TX_FULL_MASK 0x8
 
 void write_byte(volatile unsigned int *uart, unsigned char data) {
 #ifdef __SYNTHESIS__
 	int x;
-	for (int k=0;k<0x1000;k++) {
-		x= uart[2];
-	}
-	while ((uart[2] & 0x2)!=0);
+	while ((uart[2] & TX_FULL_MASK)!=0);
 	uart[1] = data;
 	return;
 #else
@@ -207,7 +205,6 @@ uint32_t cpu_step(bool irq);
 int cpu_load(uint32_t addr);
 void cpu_store(uint32_t addr,uint8_t data);
 int cpu_reset();
-int loadbinary(char *filename);
 
 extern bool halted ;
 int cmd_count = 0xAB000000;
@@ -381,10 +378,6 @@ int uart_master(volatile bool *debug, volatile bool *step,
 	write_string(uart, "Helloworld from hls-riscv on nexys4-DDR\r\n");
 	while (1) {
 
-//
-//		if (!halted) {
-//			cpu_step(false);
-//		}
 		if (*step ) {
 			*dbg_ir = 0xABBADEDE;
 		}
@@ -398,38 +391,4 @@ int uart_master(volatile bool *debug, volatile bool *step,
 	}
 }
 
-int main(int argc, char** argv) {
-	unsigned int io[1024];
-	unsigned int pc, ir;
-	bool dbg, step;
-
-#ifndef __SYNTHESIS__
-	// Open FIFO for write only
-	mkfifo("/tmp/c2s",0666);
-	io[0] = open("/tmp/c2s", O_RDONLY|O_NONBLOCK);
-	if (io[0]<0) {
-		FPRINTF(stderr,"error c2s\n");FFLUSH(stderr);
-		return -1;
-	}
-
-	mkfifo("/tmp/s2c",0666);
-	io[1] = open("/tmp/s2c", O_WRONLY);
-	if (io[1]<0) {
-		FPRINTF(stderr,"error s2c\n");FFLUSH(stderr);
-		return -1;
-	}
-
-	if (argc==2) {
-		FPRINTF(stdout,"loading program %s\n",argv[1]); FFLUSH(stdout);
-		loadbinary(argv[1]);
-	}
-
-	FPRINTF(stdout,"opened pipes\n"); FFLUSH(stdout);
-#endif
-
-	uart_master(&dbg, &step, &pc, &ir, io);
-#ifndef __SYNTHESIS__
-	system("/bin/stty -raw");
-#endif
-}
 

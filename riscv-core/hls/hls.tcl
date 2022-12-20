@@ -6,8 +6,8 @@
 open_project uart_master
 set_top uart_master
 add_files ../src/asm.cpp
-add_files  ../src/miniriscv.cpp
-add_files -cflags -I../../riscv-gdbserver ../src/uart_server.cpp
+add_files -cflags "-I../../riscv-gdbserver -I../src" ../src/riscv-iss.cpp
+add_files -cflags "-I../../riscv-gdbserver -I../src" ../src/uart_server.cpp
 open_solution "solution1"
 set_part {xc7a100tcsg324-1}
 create_clock -period 10 -name default

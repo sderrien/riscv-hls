@@ -49,7 +49,7 @@ rsync:
 	
 	
 rdebug: rgdb
-	ssh sderrien@ubuntu18vm $(REMOTE_PATH)/bin/gdb-server-uart 
+	ssh sderrien@ubuntu18vm $(REMOTE_PATH)/bin/gdb-server-uart $(DEVICE)
 	riscv32-unknown-elf-gdb ../riscv-programs/example.elf --ex='target $(REMOTE_HOST):1234'
 	
 debug:
