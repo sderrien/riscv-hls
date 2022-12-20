@@ -3,10 +3,11 @@ CFLAGS= -g -O0 -I./
 PROGS = \
 	$(BINDIR)/gdb-server-pipe \
 	$(BINDIR)/gdb-server-iss \
-	$(BINDIR)/gdb-server-uart \
-	$(BINDIR)/uart_client-pipe \
-	$(BINDIR)/uart_client-uart \
-	$(BINDIR)/uart_test
+	$(BINDIR)/gdb-server-uart 
+#	\
+#	$(BINDIR)/uart_client-pipe \
+#	$(BINDIR)/uart_client-uart \
+#	$(BINDIR)/uart_test
 
 BINDIR= ../bin/
 
