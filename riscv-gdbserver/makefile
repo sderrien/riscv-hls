@@ -12,8 +12,8 @@ BINDIR= ../bin/
 
 all: $(PROGS)
 
-$(BINDIR)/gdb-server-iss : gdb-server.cpp gdb-target-iss.cpp ../riscv-core/src/miniriscv.cpp ../riscv-core/src/asm.cpp ../riscv-core/src/rom.h
-	g++ $(CFLAGS) -g -O0 -pthread -o  $@ gdb-server.cpp gdb-target-iss.cpp ../riscv-core/src/miniriscv.cpp ../riscv-core/src/asm.cpp
+$(BINDIR)/gdb-server-iss : gdb-server.cpp gdb-target-iss.cpp ../riscv-core/src/riscv-iss.cpp ../riscv-core/src/asm.cpp ../riscv-core/src/rom.h
+	g++ $(CFLAGS) -g -O0 -pthread -o  $@ gdb-server.cpp gdb-target-iss.cpp ../riscv-core/src/riscv-iss.cpp ../riscv-core/src/asm.cpp
 
 $(BINDIR)/gdb-server-pipe : gdb-server.cpp gdb-target-pipe.cpp gdb-target-common.cpp
 	g++ $(CFLAGS) -g -O0 -o $@ $^
