@@ -1,0 +1,53 @@
+{
+   "ActiveEmotionalView":"Default View",
+   "Default View_ScaleFactor":"0.910144",
+   "Default View_TopLeft":"-115,-64",
+   "ExpandedHierarchyInLayout":"",
+   "commentid":"",
+   "guistr":"# # String gsaved with Nlview 7.0r4  2019-12-20 bk=1.5203 VDI=41 GEI=36 GUI=JA:9.0 TLS
+#  -string -flagsOSRD
+preplace port usb_uart -pg 1 -lvl 5 -x 1920 -y 490 -defaultsOSRD
+preplace port BTNC -pg 1 -lvl 0 -x 0 -y 80 -defaultsOSRD
+preplace port BTNU -pg 1 -lvl 0 -x 0 -y 100 -defaultsOSRD
+preplace port BTND -pg 1 -lvl 0 -x 0 -y 120 -defaultsOSRD
+preplace port clk -pg 1 -lvl 0 -x 0 -y 430 -defaultsOSRD
+preplace port reset -pg 1 -lvl 0 -x 0 -y 580 -defaultsOSRD
+preplace port BTNR -pg 1 -lvl 0 -x 0 -y 140 -defaultsOSRD
+preplace portBus LED -pg 1 -lvl 5 -x 1920 -y 160 -defaultsOSRD
+preplace portBus SW -pg 1 -lvl 0 -x 0 -y 160 -defaultsOSRD
+preplace portBus CN -pg 1 -lvl 5 -x 1920 -y 120 -defaultsOSRD
+preplace portBus AN -pg 1 -lvl 5 -x 1920 -y 140 -defaultsOSRD
+preplace inst axi_uartlite_0 -pg 1 -lvl 4 -x 1760 -y 500 -defaultsOSRD
+preplace inst riscv_0_axi_periph -pg 1 -lvl 3 -x 1020 -y 482 -defaultsOSRD
+preplace inst rst_clk_100M -pg 1 -lvl 1 -x 210 -y 680 -defaultsOSRD
+preplace inst xlconstant_0 -pg 1 -lvl 1 -x 210 -y 490 -defaultsOSRD
+preplace inst debug_if_0 -pg 1 -lvl 4 -x 1760 -y 160 -defaultsOSRD
+preplace inst uart_master_0 -pg 1 -lvl 2 -x 590 -y 450 -defaultsOSRD
+preplace netloc clk_1 1 0 4 30 430 390 550 790 602 1170
+preplace netloc rst_clk_100M_peripheral_aresetn 1 1 2 400 560 780
+preplace netloc reset_1 1 0 4 20 580 NJ 580 800 612 1180J
+preplace netloc debug_if_0_CN 1 4 1 NJ 120
+preplace netloc debug_if_0_AN 1 4 1 NJ 140
+preplace netloc debug_if_0_LED 1 4 1 NJ 160
+preplace netloc BTNC_1 1 0 4 NJ 80 NJ 80 NJ 80 NJ
+preplace netloc BTNU_1 1 0 4 NJ 100 NJ 100 NJ 100 NJ
+preplace netloc BTND_1 1 0 4 NJ 120 NJ 120 NJ 120 NJ
+preplace netloc BTNR_1 1 0 4 NJ 140 NJ 140 NJ 140 NJ
+preplace netloc SW_1 1 0 4 NJ 160 NJ 160 NJ 160 NJ
+preplace netloc debug_if_0_debug 1 1 4 410 320 NJ 320 NJ 320 1900
+preplace netloc debug_if_0_step 1 1 4 420 350 NJ 350 NJ 350 1890
+preplace netloc xlconstant_0_dout 1 1 1 NJ 490
+preplace netloc uart_master_0_dbg_pc 1 2 2 760J 180 N
+preplace netloc uart_master_0_dbg_ir 1 2 2 770J 200 N
+preplace netloc axi_uartlite_0_UART 1 4 1 NJ 490
+preplace netloc riscv_0_axi_periph_M00_AXI 1 3 1 1180 480n
+preplace netloc uart_master_0_m_axi_mem 1 2 1 790 420n
+levelinfo -pg 1 0 210 590 1020 1760 1920
+pagesize -pg 1 -db -bbox -sgen -120 0 2040 780
+"
+}
+{
+   "da_axi4_cnt":"3",
+   "da_board_cnt":"1",
+   "da_clkrst_cnt":"1"
+}
