@@ -5,7 +5,7 @@ OBJS= crt.o $(PROG).o
 #	  chipsupport.o \
 #	  boardsupport.o \
 
-CC=riscv32-unknown-elf-gcc -march=rv32i_zicsr -O0
+CC=riscv32-unknown-elf-gcc 
 
 INCLUDES=../riscv-core/src/
 
