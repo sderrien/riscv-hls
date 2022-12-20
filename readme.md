@@ -32,40 +32,49 @@ Installation
 
 Get the sources from the repo
 
-	git clone 
+	git clone https://github.com/sderrien/riscv-hls.git
  
 Update `PATH` with local folders 
 
-	export PATH=$PATH:#$install_dir/bin
+	cd riscv-hls
+	export PATH=$PATH:`pwd`/bin
  
-Synthesize  RTL for the CPU ISS with Vivado HLS
+Installation
+------------
 
-	make -C ./riscv-core hls_ip
+
+Synthesize RTL for the CPU ISS with Vivado HLS
+
+	make hls
 
 Perform logic sythesis, place & route and geenrate bitstream
 
-	make -C ./vivado bistream
+	make bistream
 
-Program the Nexys4-DDR board (assume /dev/ttyUSB1)   
+Program the Nexys4-DDR board through Digilent USB bridge  
 
-	make -C ./vivado program
+	make program 
 
-Compiling RISCV programs 
+Compiling gdb servers for the RISCV  
 
-	make -C ./riscv-programs 
+	make gdb 
+	
+Compiling RISCV example programs 
+
+	make elf 
 
 
 Usage (from command line) 
 -------------------------
 
-Debugging a progam using the ISS model running on the host CPU
+To debug a program running on the ISS model running on the host CPU
 	
 	gdb-server-iss
 	riscv32-unknown-elf-gdb -ex "target remote :1234" ../riscv-programs/example.elf
 
-Debugging a program running on the RISCV core on the FPGA
+To debug a program running on the FPGA using the RISCV hardware IP synthesized from the ISS model
 
-	gdb-server-uart
+	gdb-server-uart 
 	riscv32-unknown-elf-gdb -ex "target remote 1234" ../riscv-programs/example.elf
 
 
