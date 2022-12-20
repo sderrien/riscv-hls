@@ -1,0 +1,88 @@
+
+example.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+00000000 <_start>:
+   0:	00000033          	add	zero,zero,zero
+   4:	30509073          	csrw	mtvec,ra
+   8:	00000097          	auipc	ra,0x0
+   c:	01808093          	add	ra,ra,24 # 20 <_exception>
+  10:	070000ef          	jal	80 <main>
+  14:	c0010113          	add	sp,sp,-1024
+  18:	00000033          	add	zero,zero,zero
+
+0000001c <end>:
+  1c:	0000006f          	j	1c <end>
+
+00000020 <_exception>:
+  20:	34202573          	csrr	a0,mcause
+
+00000024 <loop>:
+  24:	0000006f          	j	24 <loop>
+
+00000028 <print_message>:
+#define IO_BASE 0xFFFF0000
+volatile unsigned int *iomap = (void*) (IO_BASE);
+const char message[] = "Hello world from RISC-V HLS\10\n";
+
+
+void print_message() {
+  28:	fe010113          	add	sp,sp,-32
+  2c:	00812e23          	sw	s0,28(sp)
+  30:	02010413          	add	s0,sp,32
+	for (int i=0;i<sizeof(message);i++) {
+  34:	fe042623          	sw	zero,-20(s0)
+  38:	0280006f          	j	60 <print_message+0x38>
+		iomap[0]=message[i];
+  3c:	0c400713          	li	a4,196
+  40:	fec42783          	lw	a5,-20(s0)
+  44:	00f707b3          	add	a5,a4,a5
+  48:	0007c703          	lbu	a4,0(a5)
+  4c:	0e402783          	lw	a5,228(zero) # e4 <iomap>
+  50:	00e7a023          	sw	a4,0(a5)
+	for (int i=0;i<sizeof(message);i++) {
+  54:	fec42783          	lw	a5,-20(s0)
+  58:	00178793          	add	a5,a5,1
+  5c:	fef42623          	sw	a5,-20(s0)
+  60:	fec42703          	lw	a4,-20(s0)
+  64:	01d00793          	li	a5,29
+  68:	fce7fae3          	bgeu	a5,a4,3c <print_message+0x14>
+	}
+}
+  6c:	00000013          	nop
+  70:	00000013          	nop
+  74:	01c12403          	lw	s0,28(sp)
+  78:	02010113          	add	sp,sp,32
+  7c:	00008067          	ret
+
+00000080 <main>:
+void main() {
+  80:	fe010113          	add	sp,sp,-32
+  84:	00812e23          	sw	s0,28(sp)
+  88:	02010413          	add	s0,sp,32
+	int sum;
+
+	while (1) {
+		sum += 1;
+  8c:	fec42783          	lw	a5,-20(s0)
+  90:	00178793          	add	a5,a5,1
+  94:	fef42623          	sw	a5,-20(s0)
+		//print_message();
+		if (sum == 16)
+  98:	fec42703          	lw	a4,-20(s0)
+  9c:	01000793          	li	a5,16
+  a0:	00f71463          	bne	a4,a5,a8 <main+0x28>
+			sum =0;
+  a4:	fe042623          	sw	zero,-20(s0)
+		sum += 2;
+  a8:	fec42783          	lw	a5,-20(s0)
+  ac:	00278793          	add	a5,a5,2
+  b0:	fef42623          	sw	a5,-20(s0)
+		sum += 3;
+  b4:	fec42783          	lw	a5,-20(s0)
+  b8:	00378793          	add	a5,a5,3
+  bc:	fef42623          	sw	a5,-20(s0)
+		sum += 1;
+  c0:	fcdff06f          	j	8c <main+0xc>
