@@ -13,19 +13,19 @@ OBJCPY=riscv32-unknown-elf-objcopy
 
 OBJDUMP=riscv32-unknown-elf-objdump
  
-$(PROG).bin : $(PROG).elf    ../bin/genrom
+$(PROG).bin : $(PROG).elf   ../../bin/genrom
 	$(OBJCPY) -O binary $(PROG).elf $(PROG).bin  
 	$(OBJCPY) -O ihex $(PROG).elf $(PROG).hex  
 	$(OBJDUMP) -drwC -S $(PROG).elf > $(PROG).lst
 	../bin/genrom $(PROG).bin ../riscv-core/src/rom.h
 	
-$(PROG).elf : $(OBJS) ../bin/genrom   
+$(PROG).elf : $(OBJS) ../../bin/genrom   
 	$(CC) -g -static -nostdlib -nostartfiles -o $(PROG).elf -lm -lgcc -Tlink.ld -Wl,-gc-sections $(OBJS)    
 
 $(PROG).o : $(PROG).c
 	$(CC) -c -g -o $(PROG).o $(PROG).c 
 
-../bin/genrom: utils/genrom.cpp ../riscv-core/src/asm.cpp
+../../bin/genrom: utils/genrom.cpp ../riscv-core/src/asm.cpp
 	g++ -I$(INCLUDES) -Wno-write-strings -o $@ $^  	
 
 chipsupport.o : chipsupport.c
