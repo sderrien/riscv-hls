@@ -102,15 +102,12 @@ int read_byte(volatile unsigned int *uart) {
 #endif
 }
 
-
+#define TX_FULL_MASK 0x8
 
 void write_byte(volatile unsigned int *uart, unsigned char data) {
 #ifdef __SYNTHESIS__
 	int x;
-	for (int k=0;k<0x1000;k++) {
-		x= uart[2];
-	}
-	while ((uart[2] & 0x2)!=0);
+	while ((uart[2] & TX_FULL_MASK)!=0);
 	uart[1] = data;
 	return;
 #else
