@@ -5,7 +5,7 @@ const char message[] = "Hello world from RISC-V HLS\10\n";
 
 void print_message() {
 	for (int i=0;i<sizeof(message);i++) {
-		iomap[0]=message[i];
+		iomap[0]=0x80 | message[i];
 	}
 }
 void main() {
@@ -13,7 +13,7 @@ void main() {
 
 	while (1) {
 		sum += 1;
-		//print_message();
+		print_message();
 		if (sum == 16)
 			sum =0;
 		sum += 2;
