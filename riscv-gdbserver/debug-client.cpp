@@ -11,7 +11,13 @@ typedef int64_t i64;
 typedef uint8_t u8;
 typedef uint16_t u16;
 
-#include "gdb-target.h"
+#include <gdb-target.h>
+#include <riscv-debug.h>
+#include <pthread.h>
+#include <gdb-server.h>
+#include <gdb-target.h>
+#include <riscv-iss.h>
+
 
 #include<stdlib.h>
 #include<signal.h>

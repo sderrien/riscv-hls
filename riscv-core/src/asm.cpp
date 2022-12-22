@@ -42,33 +42,33 @@ struct decode_info decode(unsigned int ir) {
 
 char buffer[256];
 
-char *regnames[32] = { "zero", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
+char const *regnames[32] = { "zero", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
 		"s0/fp", "s1", "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7", "s2",
 		"s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "t3", "t4",
 		"t5", "t6" };
 
-const char *optypes[8] =
+char const *optypes[8] =
 		{ "add", "sll", "slt", "sltu", "xor", "sr", "or", "and" };
-const char *immtypes[8] = { "addi", "slli", "slti", "sltiu", "xori", "sri",
+char const *immtypes[8] = { "addi", "slli", "slti", "sltiu", "xori", "sri",
 		"ori", "andi" };
-const char *brtypes[8] =
+char const  *brtypes[8] =
 		{ "beq", "bne", "?", "?", "blt", "bge", "bltu", "bgeu" };
-const char *ldtypes[8] = { "lb", "lh", "lw", "?", "lbu", "lhu", "?", "?" };
-const char *sttypes[8] = { "sb", "sh", "sw", "?", "?", "?", "?", "?" };
+char const  *ldtypes[8] = { "lb", "lh", "lw", "?", "lbu", "lhu", "?", "?" };
+char const  *sttypes[8] = { "sb", "sh", "sw", "?", "?", "?", "?", "?" };
 
 char* rname(unsigned int ir) {
-	return regnames[ir];
+	return (char *)regnames[ir];
 }
 
 char csrbuffer[128];
-char* csrname(unsigned int csrid) {
+char *csrname(unsigned int csrid) {
 	switch (csrid) {
 	case RISCV_CSR_MCYCLE:
-		return "mcycle";
+		return (char *)"mcycle";
 	case RISCV_CSR_MINSTRET:
-		return "minstret";
+		return (char *)"minstret";
 	case RISCV_CSR_MHARTID:
-		return "mhartid";
+		return (char *)"mhartid";
 	default: {
 		sprintf(csrbuffer, "csr[%d]", csrid);
 		return csrbuffer;
@@ -78,7 +78,7 @@ char* csrname(unsigned int csrid) {
 
 char* mnemonic(unsigned int ir) {
 
-	char *rs1, *rs2, *rd, *csr;
+	const char *rs1, *rs2, *rd, *csr;
 	unsigned int simm_I;
 	struct decode_info dc;
 	dc = decode(ir);

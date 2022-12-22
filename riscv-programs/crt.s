@@ -5,13 +5,17 @@ _start:
 	add x0,x0,x0
 	csrw mtvec, x1
 	lla x1, _exception
+	li sp, 0x10000-4
 
+	li a0, 256
+	li a1, 0xdeadbeef
+	sw a1,(a0)
+	lw a2,(a0)
 	call main
 
-	addi sp,sp, -1024
 	add x0,x0,x0
 end:
-	j end
+	ebreak
 
 
 

@@ -1,10 +1,12 @@
-CFLAGS= -g -O0 -I./
+CFLAGS= -g -O0 -I./ -I../riscv-core/src -Wc++11-compat-deprecated-writable-strings
 
 PROGS = \
 	$(BINDIR)/gdb-server-pipe \
 	$(BINDIR)/gdb-server-iss \
-	$(BINDIR)/gdb-server-uart 
-#	\
+	$(BINDIR)/gdb-server-uart \
+	$(BINDIR)/client-test-pipe \
+	$(BINDIR)/client-test-uart
+	
 #	$(BINDIR)/uart_client-pipe \
 #	$(BINDIR)/uart_client-uart \
 #	$(BINDIR)/uart_test
@@ -23,14 +25,11 @@ $(BINDIR)/gdb-server-uart : gdb-server.cpp gdb-target-uart.cpp gdb-target-common
 	g++ $(CFLAGS) -g -O0 -o $@ $^
 	
 
-#$(BINDIR)/uart_client-pipe: uart_client.cpp gdb-target-pipe.cpp gdb-target-common.cpp
-#	g++ $(CFLAGS) -g -O0 -o $@ $^
-#
-#$(BINDIR)/uart_client-uart: uart_client.cpp gdb-target-uart.cpp gdb-target-common.cpp
-#	g++ $(CFLAGS) -g -O0 -o $@ $^
-#
-#$(BINDIR)/uart_test: uart_test.cpp 
-#	g++ $(CFLAGS) -g -O0 -o $@ $^
+$(BINDIR)/client-test-pipe: client-test.cpp gdb-target-pipe.cpp gdb-target-common.cpp
+	g++ $(CFLAGS) -g -O0 -o $@ $^
+
+$(BINDIR)/client-test-uart: client-test.cpp gdb-target-uart.cpp gdb-target-common.cpp
+	g++ $(CFLAGS) -g -O0 -o $@ $^
 
 clean:
 	rm  $(PROGS)

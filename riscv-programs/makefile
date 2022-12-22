@@ -5,7 +5,8 @@ OBJS= crt.o $(PROG).o
 #	  chipsupport.o \
 #	  boardsupport.o \
 
-CC=riscv32-unknown-elf-gcc 
+CC=riscv32-unknown-elf-gcc -march=rv32i_zicsr -O0
+
 
 INCLUDES=../riscv-core/src/
 
@@ -30,16 +31,16 @@ $(PROG).o : $(PROG).c
 	g++ -I$(INCLUDES) -Wno-write-strings -o $@ $^  	
 
 chipsupport.o : chipsupport.c
-	$(CC) -c -g -o chipsupport.o -c chipsupport.c 
+	$(CC) -I$(INCLUDES) -c -g -o chipsupport.o -c chipsupport.c 
 
 boardsupport.o : boardsupport.c
-	$(CC) -c -g -o boardsupport.o -c boardsupport.c 
+	$(CC) -I$(INCLUDES) -c -g -o boardsupport.o -c boardsupport.c 
  	
 syscalls.o : syscalls.c  
-	$(CC) -c -g -o syscalls.o -c syscalls.c 
+	$(CC) -I$(INCLUDES) -c -g -o syscalls.o -c syscalls.c 
 
 crt.o : crt.s
-	$(CC) -c -o crt.o crt.s 
+	$(CC) -I$(INCLUDES) -c -o crt.o crt.s 
 	
 clean:
 	rm *.o *.elf *.hex *.bin *.lst	

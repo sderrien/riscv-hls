@@ -1,17 +1,19 @@
-
-#define MEMSIZE 4096
-
 #ifndef __SYNTHESIS__
-#include<stdio.h>
-#include<stdlib.h>
-#include<signal.h>
-#include<stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <signal.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
+#include <unistd.h>
+#include <gdb-target.h>
+#include <riscv-iss.h>
+#include <riscv-debug.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <unistd.h>
+#include <sys/ioctl.h>
+
 #endif
 
 
@@ -32,35 +34,7 @@
 #endif
 
 
-#include <gdb-target.h>
-#include <rvi32.h>
 
-#ifndef __SYNTHESIS__
-
-FILE *in_trace , *out_trace = NULL;
-
-void trace_out(unsigned char value) {
-	if (out_trace == NULL) {
-		out_trace  = fopen("uart_server_out.txt", "w");
-		if (out_trace  == NULL)
-			exit(-2);
-	}
-	FPRINTF(out_trace , "%c", (char ) value);
-	FFLUSH(out_trace );
-}
-
-void trace_in(unsigned char value) {
-	if (in_trace == NULL) {
-		in_trace  = fopen("uart_server_in.txt", "w");
-		if (in_trace  == NULL)
-			exit(-2);
-	}
-	FPRINTF(in_trace , "%c", (char ) value);
-	fflush(in_trace );
-}
-#endif
-unsigned char c;
-bool hasbyte=false;
 
 bool has_byte(volatile unsigned int *uart) {
 #ifdef __SYNTHESIS__
@@ -69,9 +43,9 @@ bool has_byte(volatile unsigned int *uart) {
 #ifdef __TTY__
 	return true;
 #else
-	if (!hasbyte)
-		hasbyte= (read(uart[0], &c, sizeof(char))==1);
-	return hasbyte;
+	int bytes;
+	ioctl(uart[1], FIONREAD, &bytes);
+	return bytes>1;
 #endif
 #endif
 }
@@ -84,25 +58,22 @@ int read_byte(volatile unsigned int *uart) {
 #ifdef __TTY__
 	return true;
 #else
-	int cpt =0;
-	while (!has_byte(uart)) {
-		if (cpt > 0x100) {
-			cpt=0;
-			FFLUSH(stdout);
-			usleep(1000);
+	unsigned char c;
+	do {
+		read(uart[1], &c, sizeof(char));
+		FPRINTF(stdout,"<-%c",0x7F&c);FFLUSH(stdout);
+		if ((c&0x80)==0) {
+			return c;
 		} else {
-			cpt++;
+			printf("stdout: %c",c);
 		}
-	}
-	//trace_in(c);
-	//printf("Received %c/%02X\n",c,c);
-	hasbyte=0;
-	return c;
+	} while(1);
 #endif
 #endif
 }
 
 #define TX_FULL_MASK 0x8
+//#define TX_FULL_MASK 0x2 //should be 0x according to doc
 
 void write_byte(volatile unsigned int *uart, unsigned char data) {
 #ifdef __SYNTHESIS__
@@ -115,18 +86,19 @@ void write_byte(volatile unsigned int *uart, unsigned char data) {
 	putc((char) data, stdout);
 	FFLUSH(stdout);
 #else
-	FPRINTF(stdout,"%c",data);FFLUSH(stdout);
-	trace_out(data);
+	FPRINTF(stdout,"%c",0x7F&data);FFLUSH(stdout);
+	//trace_out(data);
 	write(uart[1],&data, sizeof(char));
 #endif
 #endif
 }
 
 void write_string(volatile unsigned int *uart, const char mess[]) {
+	write_byte(uart, '-');
+	write_byte(uart, '>');
 	int k = 0, x;
 	do {
 		write_byte(uart, 0x80 | mess[k++]);
-
 	} while (mess[k] != 0);
 	return;
 }
@@ -194,17 +166,7 @@ unsigned int read_u32(volatile unsigned int *uart) {
 	return value;
 }
 
-#define REGSIZE 32
 
-extern int x[REGSIZE];
-
-extern unsigned int pc;
-
-
-uint32_t cpu_step(bool irq);
-int cpu_load(uint32_t addr);
-void cpu_store(uint32_t addr,uint8_t data);
-int cpu_reset();
 
 extern bool halted ;
 int cmd_count = 0xAB000000;
@@ -238,7 +200,7 @@ void process_debug_command(volatile unsigned int *uart,volatile unsigned int *ir
 			//printf("->Read mem ");
 			unsigned int addr = read_u32(uart);
 			unsigned int data ;
-			data = cpu_load(addr);
+			data = cpu_memread_u8(addr);
 			//printf("[%08X]=%02X ; {%02X,%02X,%02X,%02X}\n",addr,data,mem0[addr>>2],mem1[addr>>2],mem2[addr>>2],mem3[addr>>2]);FFLUSH(stdout);
 			write_u8(uart, data);
 			//write_byte(uart, OK);
@@ -254,7 +216,7 @@ void process_debug_command(volatile unsigned int *uart,volatile unsigned int *ir
 			unsigned int addr = read_u32(uart);
 			//write_byte(uart, OK);
 			unsigned int data = read_u8(uart);
-			cpu_store(addr, data);
+			cpu_memwrite_u8(addr, data);
 		}
 		break;
 	case READ_REG:
@@ -267,11 +229,11 @@ void process_debug_command(volatile unsigned int *uart,volatile unsigned int *ir
 			// end of magic code
 			regid= read_u8(uart);
 			if (regid==32) {
-				printf("Reading pc=%08X\n",pc);
-				write_u32(uart, pc);
+				printf("Reading pc=%08X\n",cpu_getpc());
+				write_u32(uart, cpu_getpc());
 			} else {
-				printf("Reading x[%d]=%08X\n",regid,x[regid & 0x0F]);
-				write_u32(uart, x[regid & 0x0F]);
+				printf("Reading x[%d]=%08X\n",regid,cpu_getreg(regid));
+				write_u32(uart, cpu_getreg(regid));
 			}
 		}
 		break;
@@ -282,19 +244,19 @@ void process_debug_command(volatile unsigned int *uart,volatile unsigned int *ir
 			int regid = read_u8(uart);
 			int regvalue = read_u32(uart);
 			printf("Write x[%d]=%08X\n",regid,regvalue);
-			x[regid & 0x0F] = regvalue;
+			cpu_setreg(regid ,regvalue);
 		}
 		break;
-	case SET_BKPT: {
-		printf("Set BKPT\n");
-		int bkptaddr = read_u32(uart);
-		if (add_hw_bkpt(bkptaddr)) {
-			//write_byte(uart, OK);
-		} else {
-			//write_byte(uart, NOK);
-		}
-		break;
-	}
+//	case SET_BKPT: {
+//		printf("Set BKPT\n");
+//		int bkptaddr = read_u32(uart);
+//		if (add_hw_bkpt(bkptaddr)) {
+//			//write_byte(uart, OK);
+//		} else {
+//			//write_byte(uart, NOK);
+//		}
+//		break;
+//	}
 	case RESET: {
 		cpu_reset();
 		break;
@@ -302,41 +264,41 @@ void process_debug_command(volatile unsigned int *uart,volatile unsigned int *ir
 	case INFO: {
 		printf("Device INFO\n");
 		int id = read_u8(uart);
-		switch(id) {
-			case MISA_INFO:{
-				write_u32(uart, EXTENSION_I);
-			}
-			case MVENDOR_INFO:{
-				write_u32(uart, 0xCAFE00);
-			}
-		}
+		write_u32(uart, 0xCAFE00);
+//		switch(id) {
+//			case MISA_INFO:{
+//				write_u32(uart, EXTENSION_I);
+//			}
+//			case MVENDOR_INFO:{
+//			}
+//		}
 		write_u32(uart, cpu_info(id));
 		break;
 	}
-	case UNSET_BKPT: {
-		printf("Unset BKPT\n");
-		int bkptaddr = read_u32(uart);
-		if (remove_hw_bkpt(bkptaddr)) {
-			//write_byte(uart, OK);
-		} else {
-			//write_byte(uart, NOK);
-		}
-		break;
-	}
+//	case UNSET_BKPT: {
+//		printf("Unset BKPT\n");
+//		int bkptaddr = read_u32(uart);
+//		if (remove_hw_bkpt(bkptaddr)) {
+//			//write_byte(uart, OK);
+//		} else {
+//			//write_byte(uart, NOK);
+//		}
+//		break;
+//	}
 	case STEP: {
 		if (halted) {
 			*ir = cmd_count | 0xF00D;
-			printf("Step PC=%08X\n",pc);
-			cpu_step(false);
-			sseg = pc;
-			write_u32(uart, pc);
+			printf("Step PC=%08X\n",cpu_getpc());
+			cpu_step();
+			sseg = cpu_getpc();
+			write_u32(uart, cpu_getpc());
 		}
 		break;
 	}
 	case RUN: {
 		if (halted) {
 			*ir = cmd_count | 0xFEED;
-			printf("Run from PC=%08X\n",pc);
+			printf("Run from PC=%08X\n",cpu_getpc());
 			halted = false;
 		}
 		break;
@@ -372,18 +334,13 @@ int uart_master(volatile bool *debug, volatile bool *step,
 
 	uart = iomap;
 	cpu_reset();
-	*dbg_pc = pc;
+	*dbg_pc = cpu_getpc();
 	*dbg_ir = cmd_count;
 	halted = true;
 	write_string(uart, "Helloworld from hls-riscv on nexys4-DDR\r\n");
 	while (1) {
-
-		if (*step ) {
-			*dbg_ir = 0xABBADEDE;
-		}
-		*dbg_pc = pc;
+		*dbg_pc = cpu_getpc();
 		if (has_byte(uart)) {
-			//write_string(uart, "Command received\r\n");
 			cmd_count +=0x00010000 ;
 			*dbg_ir = cmd_count | 0xBEEF;
 			process_debug_command(uart,dbg_ir);

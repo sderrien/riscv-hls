@@ -16,9 +16,14 @@
 #include <sys/ioctl.h>
 int tty;
 
+bool uart_init_device(const char *device);
+bool uart_has_byte();
+int uart_read_byte();
+void uart_write_byte(unsigned char data);
+
 #define UART_BAUDRATE B115200
 
-FILE *in_trace , *out_trace = NULL;
+FILE *in_trace , *out_trace = NULL,*stdout_trace = NULL;
 
 void trace_out(unsigned char value) {
 	if (out_trace == NULL) {
@@ -28,6 +33,17 @@ void trace_out(unsigned char value) {
 	}
 	fprintf(out_trace , "%c", (char ) value);
 	fflush(out_trace );
+}
+
+
+void trace_stdout(unsigned char value) {
+	if (stdout_trace == NULL) {
+		stdout_trace  = fopen("uart_stdout.txt", "w");
+		if (stdout_trace  == NULL)
+			exit(-2);
+	}
+	fprintf(stdout_trace , "%c", (char ) value);
+	fflush(stdout_trace );
 }
 
 void trace_in(unsigned char value) {
@@ -40,7 +56,7 @@ void trace_in(unsigned char value) {
 	fflush(in_trace );
 }
 
-bool init_device(char *device) {
+bool uart_init_device(const char *device) {
 	printf("Opening TTY device %s\n", device);
 	tty = open(device, O_RDWR | O_RDWR | O_NOCTTY);
 	if (tty < 0) {
@@ -77,13 +93,13 @@ bool init_device(char *device) {
 }
 
 
-bool has_byte() {
+bool uart_has_byte() {
 	int bytes;
 	ioctl(tty, FIONREAD, &bytes);
 	return bytes>1;
 }
 
-int read_byte() {
+int uart_read_byte() {
 	unsigned char c;
 	do {
 		int hasbyte = (read(tty, &c, sizeof(char))==1) ;
@@ -95,13 +111,14 @@ int read_byte() {
 		if ((c&0x80)==0) {
 			return c;
 		} else {
+			trace_stdout(c);
 			printf("stdout: %c",c);
 		}
 	} while(1);
 }
 
 
-void write_byte(unsigned char data) {
+void uart_write_byte(unsigned char data) {
 	trace_out(data);
 	write(tty,&data, sizeof(char));
 }

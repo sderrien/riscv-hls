@@ -1,9 +1,12 @@
-CFLAGS= -g -O0
+CFLAGS= -g -O0 -Wc++11-compat-deprecated-writable-strings
 
-all: uart_server
+all:  ../../bin/riscv-sim ../../bin/pipe-riscv-sim 
 
-uart_server:  asm.cpp miniriscv.cpp uart_server.cpp
-	g++ $(CFLAGS) -I../../riscv-gdbserver/ -o $@ $^
+../../bin/pipe-riscv-sim:  asm.cpp riscv-iss.cpp pipe_server.cpp uart_server.cpp
+	g++ $(CFLAGS) -I../../riscv-gdbserver/ -I./ -o $@ $^
+
+../../bin/riscv-sim:  asm.cpp riscv-iss.cpp riscv-sim.cpp
+	g++ $(CFLAGS) -I../../riscv-gdbserver/ -I./ -o $@ $^
 
 clean:
-	@\rm -f uart_test uart_server uart_client-uart uart_client-pipe  *.txt
+	@\rm -f riscv-sim uart_test uart_server uart_client-uart uart_client-pipe  *.txt
