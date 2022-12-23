@@ -152,16 +152,16 @@ bool step =false;
 int cmd_count = 0xAB000000;
 
 
-void process_debug_command(volatile unsigned int *uart,volatile unsigned int *ir) {
+void process_debug_command(volatile unsigned int *uart,volatile unsigned int *sseg) {
 	int cmd ;
 	cmd = read_byte(uart);
-	unsigned int c, sseg = 0;
-	*ir = 0xCAFE;
+	unsigned int c;
+	*sseg = 0xCAFE;
 
 		switch (cmd) {
 	case HALT: {
 		printf("->Halt\n");
-		*ir = cmd_count | 0xDEAD;
+		*sseg = cmd_count | 0xDEAD;
 		halted = true;
 		write_u32(uart,cpu_getpc());
 		write_byte(uart,OK);
@@ -169,7 +169,7 @@ void process_debug_command(volatile unsigned int *uart,volatile unsigned int *ir
 	}
 	case STATUS: {
 		printf("->Halt\n");
-		*ir = cmd_count | 0xDEAD;
+		*sseg = cmd_count | 0xDEAD;
 		if (halted)
 			write_byte(uart, OK);
 		else
@@ -178,7 +178,7 @@ void process_debug_command(volatile unsigned int *uart,volatile unsigned int *ir
 	}
 	case READ_MEM: {
 		unsigned int addr = read_u32(uart);
-		*ir = cmd_count | 0xCAFE;
+		*sseg = cmd_count | 0xCAFE;
 
 		unsigned int data ;
 		data = cpu_memread_u8(addr);
@@ -188,7 +188,7 @@ void process_debug_command(volatile unsigned int *uart,volatile unsigned int *ir
 	}
 	case WRITE_MEM: {
 		if (halted) {
-			*ir = cmd_count | 0xBABE;
+			*sseg = cmd_count | 0xBABE;
 			//printf("-> Write mem");FFLUSH(stdout);
 			unsigned int addr = read_u32(uart);
 			//write_byte(uart, OK);
@@ -201,7 +201,7 @@ void process_debug_command(volatile unsigned int *uart,volatile unsigned int *ir
 	}
 	case READ_REG: {
 		if (halted) {
-			*ir = cmd_count | 0xFACE;
+			*sseg = cmd_count | 0xFACE;
 			uint8_t regid;
 			// FIXME : This is magic code, uncomment it and you'll be in trouble (gdb will show errors)
 			printf(".");
@@ -223,7 +223,7 @@ void process_debug_command(volatile unsigned int *uart,volatile unsigned int *ir
 	case WRITE_REG: {
 		printf("Write reg\n");
 		if (halted) {
-			*ir = cmd_count | 0x1234;
+			*sseg = cmd_count | 0x1234;
 			int regid = read_u8(uart);
 			int regvalue = read_u32(uart);
 			printf("Write x[%d]=%08X\n",regid,regvalue);
@@ -276,7 +276,7 @@ void process_debug_command(volatile unsigned int *uart,volatile unsigned int *ir
 		break;
 	}
 	case RUN: {
-		*ir = cmd_count | 0xFEED;
+		*sseg = cmd_count | 0xFEED;
 		printf("Run from PC=%08X\n",cpu_getpc());
 		halted = false;
 
@@ -301,25 +301,22 @@ void process_debug_command(volatile unsigned int *uart,volatile unsigned int *ir
 
 
 int uart_master(
-		volatile unsigned int *dbg_pc,
-		volatile unsigned int *dbg_ir,
-		volatile unsigned int iomap[MEMSIZE]) {
+		volatile unsigned int *sseg,
+		volatile unsigned int *leds,
+		volatile unsigned int iomap[IOSIZE]) {
 #pragma HLS INTERFACE ap_ctrl_none port=return
-#pragma HLS INTERFACE ap_none port=dbg_pc register
-#pragma HLS INTERFACE ap_none port=dbg_ir register
-#pragma HLS INTERFACE m_axi depth=4 port=iomap offset=direct bundle=mem
+#pragma HLS INTERFACE ap_none port=sseg register
+#pragma HLS INTERFACE ap_none port=leds register
+#pragma HLS INTERFACE m_axi depth=IOSIZE port=iomap offset=direct bundle=mem
 	volatile unsigned int *uart;
 	int addr;
-	unsigned int sseg = 0;
 
 	uart = iomap;
 	cpu_reset();
-	*dbg_pc = cpu_getpc();
-	*dbg_ir = cmd_count;
 	halted = true;
 	write_string(uart, "Helloworld from hls-riscv on nexys4-DDR\r\n");
 	while (1) {
-		*dbg_pc = cpu_getpc();
+		*sseg = cpu_getpc();
 
 		if (!is_cpu_halted()) {
 			cpu_step();
@@ -339,8 +336,7 @@ int uart_master(
 
 		if (has_byte(uart)) {
 			cmd_count +=0x00010000 ;
-			*dbg_ir = cmd_count | 0xBEEF;
-			process_debug_command(uart,dbg_ir);
+			process_debug_command(uart,sseg);
 		}
 	}
 }

@@ -9,7 +9,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
-#include <../../riscv-gdbserver/channels.h>
+#include <channels.h>
 
 #endif
 
