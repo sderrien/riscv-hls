@@ -1,12 +1,14 @@
 CFLAGS= -g -O0 -Wc++11-compat-deprecated-writable-strings
 
-all:  ../../bin/riscv-sim ../../bin/pipe-riscv-sim 
+BINDIR= ../../bin/
 
-../../bin/pipe-riscv-sim:  asm.cpp riscv-iss.cpp pipe_server.cpp uart_server.cpp
+all:  $(BINDIR)riscv-sim $(BINDIR)pipe-riscv-sim 
+
+$(BINDIR)pipe-riscv-sim:  asm.cpp riscv-iss.cpp dbg_core.cpp uart_mock.cpp ../../riscv-gdbserver/channels.cpp ../../riscv-gdbserver/channels-pipe.cpp 
 	g++ $(CFLAGS) -I../../riscv-gdbserver/ -I./ -o $@ $^
 
-../../bin/riscv-sim:  asm.cpp riscv-iss.cpp riscv-sim.cpp
+$(BINDIR)riscv-sim:  asm.cpp riscv-iss.cpp riscv-sim.cpp
 	g++ $(CFLAGS) -I../../riscv-gdbserver/ -I./ -o $@ $^
 
 clean:
-	@\rm -f riscv-sim uart_test uart_server uart_client-uart uart_client-pipe  *.txt
+	@\rm -f $(BINDIR)riscv-sim $(BINDIR)pipe-riscv-sim   *.txt

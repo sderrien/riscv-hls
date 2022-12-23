@@ -54,6 +54,7 @@
 #include <gdb-server.h>
 #include <gdb-target.h>
 #include <riscv-iss.h>
+#include <channels.h>
 
 /* Define to log each packet */
 #define RSP_TRACE  0
@@ -2341,9 +2342,9 @@ void uart_init_device(const char *device);
 
 int main(int argc, char** argv) {
 	if (argc==2) {
-		uart_init_device(argv[1]);
+		server_init_device(argv[1]);
 	} else {
-		uart_init_device("/dev/ttyUSB1");
+		server_init_device("/dev/ttyUSB1");
 	}
 	rsp_init();
 

@@ -85,7 +85,7 @@ int getch() {
 int main(int argc,  char *argv[]) {
 	bool success;
 
-	success = client_init_device("/dev/ttyUSB1");
+	success = server_init_device("/dev/ttyUSB1");
 	if (!success) {
 		exit(-1);
 	}

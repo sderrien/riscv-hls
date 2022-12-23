@@ -11,6 +11,7 @@ elf:
 	
 gdb:
 	make -C ./riscv-gdbserver
+	make -C ./riscv-core/src/
 	
 hls: 
 	make -C ./riscv-core/hls 

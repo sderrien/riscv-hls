@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
+#include <channels.h>
 
 #endif
 
@@ -43,9 +44,7 @@ bool has_byte(volatile unsigned int *uart) {
 #ifdef __TTY__
 	return true;
 #else
-	int bytes;
-	ioctl(uart[1], FIONREAD, &bytes);
-	return bytes>1;
+	return client_has_byte();
 #endif
 #endif
 }
@@ -55,20 +54,7 @@ int read_byte(volatile unsigned int *uart) {
 	while ((uart[2] & 0x1)==0);
 	return uart[0];
 #else
-#ifdef __TTY__
-	return true;
-#else
-	unsigned char c;
-	do {
-		read(uart[1], &c, sizeof(char));
-		FPRINTF(stdout,"<-%c",0x7F&c);FFLUSH(stdout);
-		if ((c&0x80)==0) {
-			return c;
-		} else {
-			printf("stdout: %c",c);
-		}
-	} while(1);
-#endif
+	return client_read_byte();
 #endif
 }
 
@@ -82,14 +68,7 @@ void write_byte(volatile unsigned int *uart, unsigned char data) {
 	uart[1] = data;
 	return;
 #else
-#ifdef __TTY__
-	putc((char) data, stdout);
-	FFLUSH(stdout);
-#else
-	FPRINTF(stdout,"%c",0x7F&data);FFLUSH(stdout);
-	//trace_out(data);
-	write(uart[1],&data, sizeof(char));
-#endif
+	return client_write_byte(data);
 #endif
 }
 
@@ -169,23 +148,26 @@ unsigned int read_u32(volatile unsigned int *uart) {
 
 
 extern bool halted ;
+bool step =false;
 int cmd_count = 0xAB000000;
 
 
 void process_debug_command(volatile unsigned int *uart,volatile unsigned int *ir) {
 	int cmd ;
-
 	cmd = read_byte(uart);
 	unsigned int c, sseg = 0;
 	*ir = 0xCAFE;
-	switch (cmd) {
-	case HALT:
+
+		switch (cmd) {
+	case HALT: {
 		printf("->Halt\n");
 		*ir = cmd_count | 0xDEAD;
 		halted = true;
-		//write_byte(uart, OK);
+		write_u32(uart,cpu_getpc());
+		write_byte(uart,OK);
 		break;
-	case STATUS:
+	}
+	case STATUS: {
 		printf("->Halt\n");
 		*ir = cmd_count | 0xDEAD;
 		if (halted)
@@ -193,23 +175,18 @@ void process_debug_command(volatile unsigned int *uart,volatile unsigned int *ir
 		else
 			write_byte(uart, NOK);
 		break;
-	case READ_MEM:
-		if (halted) {
-			*ir = cmd_count | 0xCAFE;
+	}
+	case READ_MEM: {
+		unsigned int addr = read_u32(uart);
+		*ir = cmd_count | 0xCAFE;
 
-			//printf("->Read mem ");
-			unsigned int addr = read_u32(uart);
-			unsigned int data ;
-			data = cpu_memread_u8(addr);
-			//printf("[%08X]=%02X ; {%02X,%02X,%02X,%02X}\n",addr,data,mem0[addr>>2],mem1[addr>>2],mem2[addr>>2],mem3[addr>>2]);FFLUSH(stdout);
-			write_u8(uart, data);
-			//write_byte(uart, OK);
-		} else {
-			//printf("->Can't read mem (not halted)\n");
-			//write_byte(uart, NOK);
-		}
+		unsigned int data ;
+		data = cpu_memread_u8(addr);
+		write_u8(uart, data);
+		write_byte(uart,OK);
 		break;
-	case WRITE_MEM:
+	}
+	case WRITE_MEM: {
 		if (halted) {
 			*ir = cmd_count | 0xBABE;
 			//printf("-> Write mem");FFLUSH(stdout);
@@ -217,9 +194,12 @@ void process_debug_command(volatile unsigned int *uart,volatile unsigned int *ir
 			//write_byte(uart, OK);
 			unsigned int data = read_u8(uart);
 			cpu_memwrite_u8(addr, data);
+			write_byte(uart,OK);
+
 		}
 		break;
-	case READ_REG:
+	}
+	case READ_REG: {
 		if (halted) {
 			*ir = cmd_count | 0xFACE;
 			uint8_t regid;
@@ -235,9 +215,12 @@ void process_debug_command(volatile unsigned int *uart,volatile unsigned int *ir
 				printf("Reading x[%d]=%08X\n",regid,cpu_getreg(regid));
 				write_u32(uart, cpu_getreg(regid));
 			}
+			write_byte(uart,OK);
+
 		}
 		break;
-	case WRITE_REG:
+	}
+	case WRITE_REG: {
 		printf("Write reg\n");
 		if (halted) {
 			*ir = cmd_count | 0x1234;
@@ -245,8 +228,11 @@ void process_debug_command(volatile unsigned int *uart,volatile unsigned int *ir
 			int regvalue = read_u32(uart);
 			printf("Write x[%d]=%08X\n",regid,regvalue);
 			cpu_setreg(regid ,regvalue);
+			write_byte(uart,OK);
+
 		}
 		break;
+	}
 //	case SET_BKPT: {
 //		printf("Set BKPT\n");
 //		int bkptaddr = read_u32(uart);
@@ -259,20 +245,15 @@ void process_debug_command(volatile unsigned int *uart,volatile unsigned int *ir
 //	}
 	case RESET: {
 		cpu_reset();
+		write_byte(uart,OK);
+
 		break;
 	}
 	case INFO: {
 		printf("Device INFO\n");
 		int id = read_u8(uart);
 		write_u32(uart, 0xCAFE00);
-//		switch(id) {
-//			case MISA_INFO:{
-//				write_u32(uart, EXTENSION_I);
-//			}
-//			case MVENDOR_INFO:{
-//			}
-//		}
-		write_u32(uart, cpu_info(id));
+		write_byte(uart,OK);
 		break;
 	}
 //	case UNSET_BKPT: {
@@ -286,21 +267,20 @@ void process_debug_command(volatile unsigned int *uart,volatile unsigned int *ir
 //		break;
 //	}
 	case STEP: {
-		if (halted) {
-			*ir = cmd_count | 0xF00D;
-			printf("Step PC=%08X\n",cpu_getpc());
-			cpu_step();
-			sseg = cpu_getpc();
-			write_u32(uart, cpu_getpc());
+		if(is_cpu_halted()) {
+			printf("->Setting Step mode at PC=%08X\n",cpu_getpc());
+			step = true;
+		} else {
+			printf("-> Cannot Step as the CPU is running (at PC=%08X)\n",cpu_getpc());
 		}
 		break;
 	}
 	case RUN: {
-		if (halted) {
-			*ir = cmd_count | 0xFEED;
-			printf("Run from PC=%08X\n",cpu_getpc());
-			halted = false;
-		}
+		*ir = cmd_count | 0xFEED;
+		printf("Run from PC=%08X\n",cpu_getpc());
+		halted = false;
+
+
 		break;
 	}
 #ifndef __SYNTHESIS__
@@ -320,9 +300,9 @@ void process_debug_command(volatile unsigned int *uart,volatile unsigned int *ir
 }
 
 
-int uart_master(volatile bool *debug, volatile bool *step,
-		volatile unsigned int *dbg_pc, volatile unsigned int *dbg_ir,
-		//volatile unsigned short *leds,
+int uart_master(
+		volatile unsigned int *dbg_pc,
+		volatile unsigned int *dbg_ir,
 		volatile unsigned int iomap[MEMSIZE]) {
 #pragma HLS INTERFACE ap_ctrl_none port=return
 #pragma HLS INTERFACE ap_none port=dbg_pc register
@@ -340,6 +320,23 @@ int uart_master(volatile bool *debug, volatile bool *step,
 	write_string(uart, "Helloworld from hls-riscv on nexys4-DDR\r\n");
 	while (1) {
 		*dbg_pc = cpu_getpc();
+
+		if (!is_cpu_halted()) {
+			cpu_step();
+			printf("->Running to PC=%08X\n", cpu_getpc());
+			if (is_cpu_halted()) {
+				write_u32(uart, cpu_getpc());
+				write_byte(uart, OK);
+			}
+		}
+		if (step) {
+			cpu_step();
+			printf("->Stepping to PC=%08X\n", cpu_getpc());
+			step = false;
+			write_u32(uart, cpu_getpc());
+			write_byte(uart, OK);
+		}
+
 		if (has_byte(uart)) {
 			cmd_count +=0x00010000 ;
 			*dbg_ir = cmd_count | 0xBEEF;

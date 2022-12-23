@@ -25,7 +25,7 @@ pthread_t iss_thread;
 extern bool halted;
 bool interrupt= false;
 
-bool uart_init_device(const char *device) {
+bool server_init_device(const char *device) {
 	printf("Mocking device %s for ISS simulator \n", device);
 	return true;
 }

@@ -18,12 +18,14 @@
 
 #include <gdb-server.h>
 #include <gdb-target.h>
-#include <uart.h>
 #include <riscv-iss.h>
+#include <channels.h>
 #include <riscv-debug.h>
 
 #ifdef VERBOSE
+#define debug(...) { printf( __VA_ARGS__) ; fflush(stdout); }
 #else
+#define debug(...)
 #endif
 
 
@@ -31,7 +33,7 @@ unsigned int read_hex(int size) {
 	int k = 0;
 	unsigned int value=0;
 	for (k=0;k<size;k++) {
-		unsigned char digit = uart_read_byte();
+		unsigned char digit = server_read_byte();
 		if (digit>='0' && digit<='9' ) {
 			digit -= '0';
 		} else if (digit>='A' && digit<='F') {
@@ -63,7 +65,7 @@ void write_hex(uint8_t digit) {
 	} else {
 		digit += ('A'-10);
 	}
-	uart_write_byte(digit);
+	server_write_byte(digit);
 }
 
 void write_uxx(uint32_t value, uint8_t size) {
@@ -86,8 +88,19 @@ void write_u8(uint16_t value) {
 }
 
 
+bool wait_client_ack() {
+	int res;
+	res = server_read_byte();
+	while(res!=OK) {
+		debug("received %02X:%c , expected %02X\n",res,res,OK);
+		res = server_read_byte();
+	}
+	return true;
+}
+
 uint32_t debug_reset(){
-	uart_write_byte(RESET);
+	server_write_byte(RESET);
+	wait_client_ack();
 	return 1;
 }
 
@@ -96,78 +109,102 @@ uint32_t debug_get_pc() {
 }
 
 void debug_flush() {
-	while (uart_has_byte()) {
-		int c = uart_read_byte();
-		printf("%c", c);
+	debug("flushing\n");
+	while (server_has_byte()) {
+		int c = server_read_byte();
+		debug("%c", c);
 		fflush(stdout);
 	}
 }
 
 int debug_add_hw_bkpt(u32 addr) {
-	uart_write_byte(SET_BKPT);
+	server_write_byte(SET_BKPT);
 	write_u32(addr);
+	wait_client_ack();
 	return 1;
 }
 
 int debug_remove_hw_bkpt(u32 addr) {
-	uart_write_byte(UNSET_BKPT);
+	server_write_byte(UNSET_BKPT);
 	write_u32(addr);
+	wait_client_ack();
 	return 1;
 }
 
 uint32_t debug_run() {
-	uart_write_byte(RUN);
+	debug("sending run command\n");
+	server_write_byte(RUN);
+	uint32_t u32 = read_u32();
+	wait_client_ack();
 	return 1;
 }
 
 uint32_t debug_step() {
-	uart_write_byte(STEP);
-	return read_u32();
+	debug("sending step command\n");
+	server_write_byte(STEP);
+	uint32_t u32 = read_u32();
+	wait_client_ack();
+	return u32;
 }
 
 uint32_t debug_halt() {
-	uart_write_byte(HALT);
-	return read_u32();
+	debug("sending halt command\n");
+	server_write_byte(HALT);
+	uint32_t u32 = read_u32();
+	wait_client_ack();
+	return u32;
 }
+
+
 
 bool debug_is_halted() {
 	//printf("Sending command %c\n",STATUS);
-	uart_write_byte(STATUS);
-	return uart_read_byte()==OK;
+	server_write_byte(STATUS);
+	return wait_client_ack();
 }
 
 uint32_t debug_info(uint8_t id) {
 	//printf("Sending command %c\n",STEP);
-	uart_write_byte(INFO);
+	server_write_byte(INFO);
 	write_u8(id);
-	return read_u32();
+	uint32_t u32 = read_u32();
+	wait_client_ack();
+	return u32;
 }
 
 void debug_write_reg(uint16_t id, uint32_t value) {
-	uart_write_byte(WRITE_MEM);
+	debug("sending write_reg(%02X, %08X)\n",id,value);
+	server_write_byte(WRITE_MEM);
 	write_u8(id);
 	write_u32(value);
+	wait_client_ack();
 }
 
 uint32_t debug_read_reg(uint16_t id) {
-	uart_write_byte(READ_REG);
+	debug("sending read_reg(%02X)\n",id);
+	server_write_byte(READ_REG);
 	write_u8(id);
 	uint32_t res = read_u32();
+	debug("	-> read %08X\n",res);
+	wait_client_ack();
 	return res;
 }
 
 
 void debug_write_mem(uint32_t addr, uint8_t value) {
-	uart_write_byte(WRITE_MEM);
+	server_write_byte(WRITE_MEM);
 	write_u32(addr);
 	write_u8(value);
+	wait_client_ack();
 }
 
 uint8_t debug_read_mem(uint32_t addr) {
 	//printf("read mem %d\n",addr);
-	uart_write_byte(READ_MEM);
+	server_write_byte(READ_MEM);
 	write_u32(addr);
-	return read_u8();
+	uint8_t res =read_u8();
+	wait_client_ack();
+	return res;
 }
 
 
