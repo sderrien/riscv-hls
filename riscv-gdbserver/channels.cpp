@@ -62,11 +62,41 @@ void client_write_byte(unsigned char data) {
 	return channel_write_byte(c2s_channel,data);
 }
 
+
+bool has_pending_char = false;
+int pending_char ;
+
+// FIXME : never actually used
 bool server_has_byte() {
-	return channel_has_byte(c2s_channel);
+	if (has_pending_char) {
+		return true;
+	} else if (channel_has_byte(c2s_channel)) {
+		int res= channel_read_byte(c2s_channel);
+		if ((res & 0x80)!=0) {
+			printf("%c",res &0x7F);fflush(stdout);
+			return false;
+		} else {
+			has_pending_char=true;
+			pending_char = res;
+			return true;
+		}
+	}
+	return true;
 }
+
 int server_read_byte() {
-	return channel_read_byte(c2s_channel);
+	if (has_pending_char) {
+		has_pending_char=false;
+		return pending_char;
+	} else {
+		int res= channel_read_byte(c2s_channel);
+		while ((res & 0x80)!=0) {
+			printf("%c",res &0x7F);fflush(stdout);
+			res= channel_read_byte(c2s_channel);
+		}
+		return res;
+
+	}
 }
 void server_write_byte(unsigned char data) {
 	return channel_write_byte(s2c_channel,data);

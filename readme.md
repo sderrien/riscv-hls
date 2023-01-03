@@ -22,7 +22,7 @@ Prerequisites
 
 - Nexys4-DDR FPGA board from digilent
 
-- Vivado HLS 2020 + Vivado (should work on other versions too)
+- Vivad 2020o (Vivado HLS) -- should work on other versions too
  
 - Riscv32 toolchain (gcc + bintuils + gdb)
 
@@ -70,6 +70,11 @@ Usage (from command line)
 To debug a program running on the ISS model running on the host CPU
 	
 	gdb-server-iss
+	riscv32-unknown-elf-gdb -ex "target remote :1234" ../riscv-programs/example.elf
+
+To debug a program running on a behavioral model of the riscv + debug core on the host CPU
+	
+	gdb-server-pipe
 	riscv32-unknown-elf-gdb -ex "target remote :1234" ../riscv-programs/example.elf
 
 To debug a program running on the FPGA using the RISCV hardware IP synthesized from the ISS model

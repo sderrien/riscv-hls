@@ -5,30 +5,29 @@
 #include <string.h>
 #include <string.h>
 
+#define RANGE(x,ub,lb) ((x & (1<<(ub)))>>lb)
 struct decode_info decode(unsigned int ir) {
 #pragma PURE
 #pragma CONTROL_NODE
 	{
 		struct decode_info res = { };
 		res.opcode = (ir & 0x7f);
+		//res.opcode = RANGE(ir,5,0);
 		res.rd = (ir >> 7) & 0x1f;
+		//res.rd = RANGE(ir,11,7);
 		res.funct3 = (ir >> 12) & 0x07;
 		res.rs1 = (ir >> 15) & 0x1f;
 		res.rs2 = (ir >> 20) & 0x1f;
 		res.funct7 = (ir >> 25) & 0x7f;
 		res.imm_I = (ir >> 20) & 0xfff;
 		res.funct12 = res.imm_I;
-		res.simm_I =
-				(res.imm_I >= (1 << 11)) ? res.imm_I - (1 << 12) : res.imm_I;
-		res.imm_S = ((ir >> 7) & 0x0f) | ((ir >> 20) & 0xfe0);
-		res.simm_S =
-				(res.imm_S >= (1 << 11)) ? res.imm_S - (1 << 12) : res.imm_S;
+		res.simm_I = (res.imm_I >= (1 << 11)) ? (res.imm_I - (1 << 12)) : res.imm_I;
+		res.imm_S = ((ir >> 7) & 0x01f) | ((ir >> 20) & 0xfe0);
+		res.simm_S = (res.imm_S >= (1 << 11)) ? (res.imm_S - (1 << 12)) : res.imm_S;
 		res.imm_U = (ir & 0xfffff000);
 		res.shamt = (ir >> 20) & 0x0f;
-		res.imm_J = ((ir >> 20) & 0x7fe) | ((ir >> 9) & 0x800) | (ir & 0xff000)
-				| ((ir >> 11) & 0x100000);
-		res.simm_J =
-				(res.imm_J >= (1 << 20)) ? (res.imm_J - (1 << 21)) : res.imm_J;
+		res.imm_J = ((ir >> 20) & 0x7fe) | ((ir >> 9) & 0x800) | (ir & 0xff000) | ((ir >> 11) & 0x100000);
+		res.simm_J = (res.imm_J >= (1 << 20)) ? (res.imm_J - (1 << 21)) : res.imm_J;
 		res.br_uoffset = ((ir >> 7) & 0x1e) | ((ir >> 20) & 0x7e0)
 				| ((ir << 4) & 0x800) | ((ir >> 19) & 0x1000);
 		res.br_offset =
@@ -80,6 +79,7 @@ char* mnemonic(unsigned int ir) {
 
 	const char *rs1, *rs2, *rd, *csr;
 	unsigned int simm_I;
+	unsigned int simm_S;
 	struct decode_info dc;
 	dc = decode(ir);
 	rd = regnames[dc.rd];
@@ -87,6 +87,7 @@ char* mnemonic(unsigned int ir) {
 	rs2 = regnames[dc.rs2];
 	csr = csrname(dc.rs2);
 	simm_I = dc.simm_I;
+	simm_S = dc.simm_S;
 
 	switch (dc.opcode) {
 	case RISCV_LUI: {
@@ -98,8 +99,17 @@ char* mnemonic(unsigned int ir) {
 		break;
 	}
 	case RISCV_OPI: {
-		sprintf(buffer, "%s %s,%s,%08X", immtypes[dc.funct3], rd, rs1,
-				dc.simm_I);
+
+		if ((dc.funct3 == RISCV_OPI_SRI)) {
+			if (dc.simm_I&0xF00) {
+				sprintf(buffer, "srai %s,%s,%08X", rd, rs1,dc.simm_I);
+			} else {
+				sprintf(buffer, "srli %s,%s,%08X", rd, rs1,dc.simm_I);
+			}
+		} else {
+			sprintf(buffer, "%s %s,%s,%08X", immtypes[dc.funct3], rd, rs1,dc.simm_I);
+		}
+
 		break;
 	}
 	case RISCV_OP: {
@@ -119,12 +129,11 @@ char* mnemonic(unsigned int ir) {
 		break;
 	}
 	case RISCV_ST: {
-		sprintf(buffer, "%s %s,%s(%08X)", sttypes[dc.funct3], rs2, rs1,
-				dc.simm_S);
+		sprintf(buffer, "%s %s,%s(%d:%d)", sttypes[dc.funct3], rs2, rs1,dc.simm_S,dc.imm_S);
 		break;
 	}
 	case RISCV_LD: {
-		sprintf(buffer, "%s %s,%s(%08X)", ldtypes[dc.funct3], rd, rs1, simm_I);
+		sprintf(buffer, "%s %s,%s(%d:%d)", ldtypes[dc.funct3], rd, rs1,dc.simm_I,dc.imm_I);
 		break;
 	}
 	case RISCV_JAL: {

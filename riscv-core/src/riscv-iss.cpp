@@ -13,6 +13,9 @@
 #include "riscv-iss.h"
 #include "gdb-target.h"
 
+#ifndef __SYNTHESIS__
+#include <channels.h>
+#endif
 unsigned int uint32(int x) {
 	return (unsigned int) x;
 }
@@ -53,8 +56,11 @@ short extract_half(unsigned int data, unsigned int offset) {
 unsigned long long cyclecnt = 0;
 
 unsigned int tick() {
-	return cyclecnt;
+	return cyclecnt++;
 }
+
+
+void write_to_stdout(int data);
 
 unsigned int byte_offset(unsigned int addr) {
 	return (addr & 0x3);
@@ -107,6 +113,7 @@ void trace_io(unsigned int addr, unsigned int value) {
 
 
 #define FFLUSH(...) {  fflush(__VA_ARGS__); }
+//#define PRINTF(...)
 #define PRINTF(...) { printf( __VA_ARGS__) ; fflush(stdout); }
 #define FPRINTF(...) fprintf( __VA_ARGS__)
 
@@ -131,6 +138,7 @@ int read_byte() ;
 void write_byte(unsigned char data);
 
 
+
 void cpu_iowrite_u8(uint32_t addr,uint8_t data) {
 #ifndef __SYNTHESIS__
 	PRINTF("[unsupported] writing byte %08X to io[%08X]\n", data,addr);
@@ -145,7 +153,7 @@ void cpu_iowrite_u32(uint32_t addr,uint32_t data) {
 #ifndef __SYNTHESIS__
 	switch (addr % IOSIZE) {
 		case 0x4:
-			PRINTF("%c",data);fflush(stdout);
+			write_to_stdout(data);
 			break;
 		default:
 			PRINTF("writing word %08X to io[%08X]\n", data,addr % IOSIZE);
@@ -157,7 +165,7 @@ void cpu_iowrite_u32(uint32_t addr,uint32_t data) {
 }
 
 uint8_t cpu_ioread_u8(uint32_t addr) {
-	PRINTF("Reading byte from io[%08X]\n", addr);
+	//PRINTF("Reading byte from io[%08X]\n", addr);
 	return extract_byte(cpu_ioread_u32(addr),byte_offset(addr)) ;
 
 }
@@ -204,7 +212,7 @@ uint32_t cpu_memread_u8(uint32_t addr) {
 void cpu_memwrite_u8(uint32_t addr,uint8_t data) {
 	if (addr < (MEMSIZE)) {
 
-	PRINTF("mem[%08X]=%02X\n",addr,data);
+	//PRINTF("mem[%08X]=%02X\n",addr,data);
 	memw[addr]=data;
 
 	switch (byte_offset(addr)) {
@@ -227,6 +235,7 @@ void cpu_memwrite_u8(uint32_t addr,uint8_t data) {
 
 void cpu_memwrite_u32(uint32_t addr,uint32_t data) {
 	if ((addr % 4)==0) {
+		//FPRINTF(stdout,"Write mem32[%08X]<=%08X",addr,data);
 		mem0[addr32(addr)]= extract_byte(data,0);
 		mem1[addr32(addr)]= extract_byte(data,1);
 		mem2[addr32(addr)]= extract_byte(data,2);
@@ -240,9 +249,11 @@ uint32_t cpu_memread_u32(uint32_t addr) {
 	if ((addr % 4)==0) {
 		uint32_t waddr;
 		waddr = addr32(addr);
-		return pack_bytes(mem0[waddr],mem1[waddr],mem2[waddr],mem3[waddr]);
+		uint32_t data= pack_bytes(mem0[waddr],mem1[waddr],mem2[waddr],mem3[waddr]);
+		//FPRINTF(stdout,"Read mem32[%08X]=>%08X",addr,data);
+		return data;
 	} else {
-		FPRINTF(stderr,"[Error] Unaligned access [%08X]\n",addr);
+		//FPRINTF(stderr,"[Error] Unaligned access [%08X]\n",addr);
 		return 0;
 	}
 }
@@ -291,6 +302,7 @@ int cpu_reset() {
 	for (int k=0;k<32;k++) {
 		x[k]=0;
 	}
+	halted = false;
 	return 1;
 }
 
@@ -348,7 +360,7 @@ uint32_t cpu_run() {
 }
 
 bool irq = false;
-
+bool trace_instr= true;
 uint32_t cpu_step() {
 
 	char shcpt = -1;
@@ -383,6 +395,10 @@ uint32_t cpu_step() {
 		addr = addr32(pc);
 		ir = pack_bytes(mem0[addr], mem1[addr], mem2[addr], mem3[addr]);
 		//DEBUG("MEM[PC=%08X]=%08X, {%08X,%08X,%08X,%08X}\n",pc,ir,mem0[addr], mem1[addr], mem2[addr], mem3[addr]);
+
+		if (trace_instr) {
+			PRINTF("PC=%08X:[%08X] %-21s ",pc, ir, mnemonic(ir)); fflush(stdout);
+		}
 		dc = decode(ir);
 		rd = dc.rd;
 		next_pc = pc + 4;
@@ -436,12 +452,18 @@ uint32_t cpu_step() {
 				break;
 			}
 			case RISCV_OPI_SRI: {
-				write_reg(x, rd, (x[dc.rs1] >> dc.simm_I));
+				if ((dc.imm_I&0xF00)!=0) {
+					// SRAI
+					write_reg(x, rd, (((int)x[dc.rs1]) >> dc.simm_I));
+				} else {
+					// SRLI
+					write_reg(x, rd, (x[dc.rs1] >> dc.simm_I));
+				}
 				valid = true;
 				break;
 			}
 			case RISCV_OPI_SLLI: {
-				write_reg(x, rd, (x[dc.rs1] << dc.simm_I));
+				write_reg(x, rd, (x[dc.rs1] << (dc.simm_I)));
 				valid = true;
 				break;
 			}
@@ -601,19 +623,22 @@ uint32_t cpu_step() {
 #endif
 #ifndef NO_LDST
 		case RISCV_ST: {
-			addr = x[dc.rs1] + dc.simm_S;
+			addr= ((int)x[dc.rs1]) + (dc.simm_S);
 			waddr= addr32(addr);
 			offset= byte_offset(addr);
+
 			switch (dc.funct3) {
 			case RISCV_ST_SW: {
 				valid = (offset % 4) == 0;
+				if (!valid)
+					fprintf(stderr, "Unaligned write not supported x=%08X, imm=%08X, addr=%08X\n", (int)(x[dc.rs1]), dc.simm_S, addr) ;
+
 				if (is_io_access(addr)) {
+					if (trace_instr) fprintf(stdout, "IO[%08X+%08X=%08X]", (int)(x[dc.rs1]), dc.simm_S, addr) ;
 					cpu_iowrite_u32(addr, x[dc.rs2]);
 				} else {
-					mem0[waddr] = extract_byte(x[dc.rs2], 0);
-					mem1[waddr] = extract_byte(x[dc.rs2], 1);
-					mem2[waddr] = extract_byte(x[dc.rs2], 2);
-					mem3[waddr] = extract_byte(x[dc.rs2], 3);
+					if (trace_instr) fprintf(stdout, "MEM[%08X+%08X=%08X]", (int)(x[dc.rs1]), dc.simm_S, addr) ;
+					cpu_memwrite_u32(addr, x[dc.rs2]);
 				}
 
 				valid = true;
@@ -642,7 +667,6 @@ uint32_t cpu_step() {
 			}
 			case RISCV_ST_SB: {
 				valid = (offset % 4) == 0;
-				printf("%08X\n",addr);
 				if (is_io_access(addr)) {
 					cpu_iowrite_u8(addr, data);
 					//getchar();
@@ -673,15 +697,41 @@ uint32_t cpu_step() {
 		}
 		case RISCV_LD: {
 
-			addr= x[dc.rs1] + dc.simm_I;
+			addr= (x[dc.rs1]) +  (dc.simm_I);
 			waddr = addr32(addr);
-			offset= byte_offset(addr);
+			if (trace_instr) fprintf(stdout, "MEM[%d+%d=%d]", (int)(x[dc.rs1]), dc.simm_I, addr) ;
 
+			if (is_io_access(addr)) {
+				fprintf(stderr, "IO read not yet supported x=%08X, imm=%08X, addr=%016llX, waddr=%08X\n", x[dc.rs1], dc.simm_I, addr,waddr) ;
+				valid = false;
+				break;
+			}
+			offset= byte_offset(addr);
 			data = pack_bytes(mem0[waddr], mem1[waddr], mem2[waddr],mem3[waddr]);
 			switch (dc.funct3) {
 			case RISCV_LD_LW: {
 				valid = (offset % 4) == 0;
-				write_reg(x, rd, data);
+				if (!valid) {
+
+					int xx,y,z;
+					unsigned int uxx,uy,uz;
+					xx = x[dc.rs1];
+					y =(dc.simm_S);
+					z  = xx + y;
+
+					printf("x=%08x, y=%08x, z=%08x\n",xx,y,z);
+
+					uxx =  x[dc.rs1];
+					uy = (dc.simm_S);
+					uz  = uxx + uy;
+					printf("ux=%08x, uy=%08x, uz=%08x\n",uxx,uy,uz);
+
+					fprintf(stderr, "Unaligned read not supported x=%08X, imm=%08X, laddr=%016lX, waddr=%08X\n", x[dc.rs1], dc.simm_I, addr,waddr) ;
+					valid = false;
+					break;
+				}
+
+				write_reg(x, rd, cpu_memread_u32(addr));
 				break;
 			}
 			case RISCV_LD_LB: {
@@ -713,6 +763,13 @@ uint32_t cpu_step() {
 		case RISCV_SYS: {
 			csridx = dc.imm_I;
 			tmp = csr[csridx];
+			if (csridx==RISCV_CSR_MCYCLE) {
+				printf("mcycle=%08X\n",tmp);
+
+			}
+			if (csridx==RISCV_CSR_MINSTRET) {
+				printf("msnsn=%08X\n",tmp);
+			}
 
 			switch (dc.funct3) {
 			case RISCV_SYS_ECALL_EBREAK:
@@ -766,10 +823,11 @@ uint32_t cpu_step() {
 #endif
 		}
 
-//		PRINTF("PC=%08X:[%08X] %-21s  // %s=%08X,%s=%08X,%s=%08X\n",
-//				pc, ir, mnemonic(ir), rname(dc.rd), x[dc.rd],
-//				rname(dc.rs1), x[dc.rs1], rname(dc.rs2), x[dc.rs2]);
-
+		if (trace_instr) {
+		PRINTF(" // %s=%08X,%s=%08X,%s=%08X\n",
+				rname(dc.rd), x[dc.rd],
+				rname(dc.rs1), x[dc.rs1], rname(dc.rs2), x[dc.rs2]);
+		}
 		csr[RISCV_CSR_MINSTRET] = insncnt;
 
 		if (valid) {

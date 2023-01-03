@@ -72,6 +72,11 @@ void write_byte(volatile unsigned int *uart, unsigned char data) {
 #endif
 }
 
+void write_to_stdout(int data) {
+	client_write_byte(data | 0x80);
+}
+
+
 void write_string(volatile unsigned int *uart, const char mess[]) {
 	write_byte(uart, '-');
 	write_byte(uart, '>');
@@ -168,13 +173,14 @@ void process_debug_command(volatile unsigned int *uart,volatile unsigned int *ss
 		break;
 	}
 	case STATUS: {
-		printf("->Halt\n");
+		printf("->Status\n");
 		*sseg = cmd_count | 0xDEAD;
 		if (halted)
-			write_byte(uart, OK);
+			write_byte(uart, -1);
 		else
-			write_byte(uart, NOK);
+			write_byte(uart, 0);
 		break;
+		write_byte(uart, OK);
 	}
 	case READ_MEM: {
 		unsigned int addr = read_u32(uart);
@@ -203,16 +209,12 @@ void process_debug_command(volatile unsigned int *uart,volatile unsigned int *ss
 		if (halted) {
 			*sseg = cmd_count | 0xFACE;
 			uint8_t regid;
-			// FIXME : This is magic code, uncomment it and you'll be in trouble (gdb will show errors)
-			printf(".");
-			FFLUSH(stdout);
-			// end of magic code
 			regid= read_u8(uart);
 			if (regid==32) {
-				printf("Reading pc=%08X\n",cpu_getpc());
+				//printf("Reading pc=%08X\n",cpu_getpc());
 				write_u32(uart, cpu_getpc());
 			} else {
-				printf("Reading x[%d]=%08X\n",regid,cpu_getreg(regid));
+				//printf("Reading x[%d]=%08X\n",regid,cpu_getreg(regid));
 				write_u32(uart, cpu_getreg(regid));
 			}
 			write_byte(uart,OK);
@@ -314,7 +316,7 @@ int uart_master(
 	uart = iomap;
 	cpu_reset();
 	halted = true;
-	write_string(uart, "Helloworld from hls-riscv on nexys4-DDR\r\n");
+	write_string(uart, "Helloworld from the debug monitor.\r\n");
 	while (1) {
 		*sseg = cpu_getpc();
 

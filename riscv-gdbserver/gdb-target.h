@@ -17,6 +17,7 @@ typedef uint16_t u16;
 
 uint32_t debug_run();
 uint32_t debug_halt();
+uint32_t debug_wait();
 uint32_t debug_step();
 uint32_t debug_reset();
 uint32_t debug_get_pc();

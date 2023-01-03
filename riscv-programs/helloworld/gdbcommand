@@ -1,0 +1,4 @@
+file helloworld.elf
+target remote:1234
+load helloworld.elf
+si

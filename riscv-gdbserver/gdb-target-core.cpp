@@ -155,12 +155,22 @@ uint32_t debug_halt() {
 	return u32;
 }
 
+//int pthread_create(pthread_t *restrict tidp, const pthread_attr_t *restrict attr, void *(*start_rtn)(void), void *restrict arg)
 
 
 bool debug_is_halted() {
 	//printf("Sending command %c\n",STATUS);
 	server_write_byte(STATUS);
-	return wait_client_ack();
+	uint8_t status = read_u32();
+	wait_client_ack();
+	return status!=0;
+}
+
+uint32_t debug_wait() {
+	while(!debug_is_halted()) {
+		usleep(1000);
+	}
+	return 1;
 }
 
 uint32_t debug_info(uint8_t id) {

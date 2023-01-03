@@ -25,13 +25,21 @@ pthread_t iss_thread;
 extern bool halted;
 bool interrupt= false;
 
+void write_to_stdout(int data) {
+	printf("%c",data);fflush(stdout);
+}
+
+extern bool trace_instr;
+
 bool server_init_device(const char *device) {
 	printf("Mocking device %s for ISS simulator \n", device);
+	trace_instr= false;
 	return true;
 }
 
 void* cpu_thread(void* arg) {
 	halted=false;
+	printf("Starting CPU thread from PC=%08XC\n",cpu_getpc());
 	while(!halted) {
 		cpu_step();
 		if (interrupt) {
@@ -62,6 +70,12 @@ uint32_t debug_run() {
 	return 1;
 }
 
+//int pthread_create(pthread_t *restrict tidp, const pthread_attr_t *restrict attr, void *(*start_rtn)(void), void *restrict arg)
+uint32_t debug_wait() {
+	pthread_join(iss_thread, NULL);
+	return 1;
+}
+
 
 //int pthread_create(pthread_t *restrict tidp, const pthread_attr_t *restrict attr, void *(*start_rtn)(void), void *restrict arg)
 uint32_t debug_step() {
@@ -72,7 +86,9 @@ uint32_t debug_step() {
 //int pthread_create(pthread_t *restrict tidp, const pthread_attr_t *restrict attr, void *(*start_rtn)(void), void *restrict arg)
 uint32_t debug_halt() {
 	printf("Sending interrupt to ISS thread\n");
+	interrupt = true;
 	pthread_join(iss_thread, NULL);
+	interrupt = true;
 	printf("ISS and gdbserver threads synched\n");
 	return 1;
 }
