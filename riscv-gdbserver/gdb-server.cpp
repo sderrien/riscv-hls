@@ -69,7 +69,7 @@
 
 #define CTRLC 0x3
 
-
+bool verbose = false;
 
 #define DEBUG(...)
 //#define DEBUG(...) { printf( __VA_ARGS__) ; fflush(stdout); }
@@ -1903,7 +1903,7 @@ static void rsp_step(struct rsp_buf *buf) {
 				buf->data);
 		addr = debug_get_pc(); /* Default uses current NPC */
 	}
-	printf("STEP %08lx\n",addr);
+	if (verbose) printf("STEP %08lx\n",addr);
 
 	//cpu_step(false);
 	// TODO call step here
@@ -1996,10 +1996,10 @@ static void rsp_vpkt(struct rsp_buf *buf) {
 		} else if (0 == strncmp("vCont;c", buf->data, strlen("vCont;c"))) {
 			rsp.stalled = 1;
 			rsp.stepping = 0;
-			printf("continue\n");
+			if (verbose) printf("continue\n");
 			put_str_packet("OK");
 			debug_run();
-			printf("End of continue\n");
+			if (verbose) printf("End of continue\n");
 			put_str_packet("S05");
 			debug_wait();
 			rsp_trap();
@@ -2047,8 +2047,7 @@ static void rsp_vpkt(struct rsp_buf *buf) {
 		rsp_restart();
 		put_str_packet("S05");
 	} else {
-		fprintf(stderr, "Warning: Unknown RSP 'v' packet type %s: ignored\n",
-				buf->data);
+		fprintf(stderr, "Warning: Unknown RSP 'v' packet type %s: ignored\n",buf->data);
 		put_str_packet("OK");
 		return;
 	}
@@ -2163,7 +2162,7 @@ static void rsp_remove_matchpoint(struct rsp_buf *buf) {
 	switch (type) {
 	case BP_MEMORY:
 
-		printf("Remove breakpoint from memory at %08X\n",addr);
+		if (verbose) printf("Remove breakpoint from memory at %08X\n",addr);
 
 		/* Memory breakpoint - replace the original instruction. */
 		//addr-=4; //Because of PC
@@ -2255,23 +2254,23 @@ static void rsp_insert_matchpoint(struct rsp_buf *buf) {
 		 We make sure th instruction cache is invalidated first, so that the
 		 read and write always work correctly. */
 		//addr -=4; // Because of PC points to 4 ahead.
-		printf("Add breakpoint in memory at %08X\n",addr);
+		if (verbose) printf("Add breakpoint in memory at %08X\n",addr);
 		instr = debug_read_insn(addr);
-		printf("Mem[%08lX]=%08X",addr,instr);
+		if (verbose) printf("Mem[%08lX]=%08X",addr,instr);
 		debug_write_insn(addr, EBREAK);
 		mp_hash_add(type, addr, instr);
-		printf("=> %08X \n",debug_read_insn(addr));
+		if (verbose) printf("=> %08X \n",debug_read_insn(addr));
 		put_str_packet("OK");
 		return;
 
 	case BP_HARDWARE:
-		printf("Hardware breakpoint not supported\n");
+		fprintf(stderr,"Hardware breakpoint not supported\n");
 		debug_add_hw_bkpt(addr);
 		put_str_packet(""); /* Not supported */
 		return;
 
 	case WP_WRITE:
-		printf("Add watchpoint\n");
+		fprintf(stderr,"Add watchpoint\n");
 		//if(!(addr == WATCHPOINT_ADDR))
 		//{
 		//  fprintf(stderr, "Watchpoints not supported to addresses other than WATCHPOINT_ADDR.\n");
@@ -2285,12 +2284,12 @@ static void rsp_insert_matchpoint(struct rsp_buf *buf) {
 		return;
 
 	case WP_READ:
-		printf("WP_READ unsupported\n");
+		fprintf(stderr,"WP_READ unsupported\n");
 		put_str_packet(""); /* Not supported */
 		return;
 
 	case WP_ACCESS:
-		printf("WP_ACCESS unsupported\n");
+		fprintf(stderr,"WP_ACCESS unsupported\n");
 		put_str_packet(""); /* Not supported */
 		return;
 
@@ -2348,6 +2347,12 @@ void rsp_check_watch(unsigned int addr) {
 void uart_init_device(const char *device);
 
 int main(int argc, char** argv) {
+
+	for (int k=1;k<argc;k++) {
+		if (strcmp(argv[k], "-verbose")==0) {
+			verbose=true;
+		}
+	}
 	if (argc==2) {
 		server_init_device(argv[1]);
 	} else {

@@ -102,17 +102,28 @@ void __attribute__((weak)) thread_entry(int cid, int nc) {
 		;
 }
 
-unsigned int x = 15,y;
+extern unsigned long long mcycle_s ;
+extern unsigned long long minsn_s ;
+
+extern unsigned long long mcycle_e ;
+extern unsigned long long minsn_e ;
+
+void start_trigger ();
+void stop_trigger ();
+
+float x[16]={4.12};
 
 int __attribute__((weak)) main(int argc, char **argv) {
-	// single-threaded programs override this function.
-//  printstr("Implement main() ! \n");
-	//printf("%c\n",'X');
-	y= x % 10;
-	printf("Hello %x\n",y-'0');
 
-	//printstr("Implement main(), \n");
+	start_trigger();
 
+	for (int k=1;k<16;k++) {
+		x[k]=x[k-1]*x[k-1]-123.0;
+	}
+	stop_trigger();
+	unsigned int nbcycle=  (mcycle_e-mcycle_s);
+	printf("#insn %d\n", (int)(minsn_e-minsn_s));
+	printf("#cycle %d\n", (int)(nbcycle));
 	return -1;
 }
 
@@ -144,22 +155,6 @@ void _init(int cid, int nc) {
 	exit(ret);
 }
 
-//#undef putchar
-//int putchar(int ch)
-//{
-//  static __thread char buf[64] __attribute__((aligned(64)));
-//  static __thread int buflen = 0;
-//
-//  buf[buflen++] = ch;
-//
-//  if (ch == '\n' || buflen == sizeof(buf))
-//  {
-//    syscall(SYS_write, 1, (uintptr_t)buf, buflen);
-//    buflen = 0;
-//  }
-//
-//  return 0;
-//}
 
 void printhex(uint64_t x) {
 	char str[17];
@@ -174,48 +169,35 @@ void printhex(uint64_t x) {
 }
 
 
-//static unsigned long mod10(unsigned long val) {
-//	unsigned char res = 0; //just to show that we don't need a big accumulator
-//
-//	res = val & 0xf; // res can never be > 15
-//	if (res >= 10) {
-//		res -= 10;
-//	}
-//
-//	for (val >>= 4; val; val >>= 4) {
-//		res += (val & 0xf) << 2 | (val & 0xf) << 1;
-//		res = mod10(res); // the recursive call
-//	}
-//
-//	return res;
-//}
-
 static inline void printnum(void (*putch)(int, void**), void **putdat,
 		unsigned long long num, unsigned base, int width, int padc) {
 	unsigned digs[sizeof(num) * CHAR_BIT];
 	int pos = 0;
-	int num32 =0;
+	int num32 = 0;
 	char digit;
-	num32 = num;
+//#	num32 = num;
+//	while (1) {
+//		digit = num32 % base;
+//		digs[pos++] = digit;
+//		if (num32 < base)
+//			break;
+//		num32 = num32 / base;
+//	}
+
 	while (1) {
-		digit = num32 % base;
-		num32 = num32 / base;
+		digit = num % base;
 		digs[pos++] = digit;
-	   if (num32 < base)
-		  break;
+		if (num < base)
+			break;
+		num = num / base;
 	}
 
-//		while (1) {
-//			digit = num % base;
-//			num = num / base;
-//			digs[pos++] = digit;
-//		   if (num < base)
-//			  break;
-//
-//		}
 
-	//  while (width-- > pos)
-//    putch(padc, putdat);
+	//	if (width>=0) {
+//		while (width-- > pos)
+//				putch(padc, putdat);
+//
+//	}
 
 	while (pos-- > 0)
 		putch(digs[pos] + (digs[pos] >= 10 ? 'a' - 10 : '0'), putdat);

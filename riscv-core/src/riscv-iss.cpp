@@ -394,7 +394,6 @@ uint32_t cpu_step() {
 	} else {
 		addr = addr32(pc);
 		ir = pack_bytes(mem0[addr], mem1[addr], mem2[addr], mem3[addr]);
-		//DEBUG("MEM[PC=%08X]=%08X, {%08X,%08X,%08X,%08X}\n",pc,ir,mem0[addr], mem1[addr], mem2[addr], mem3[addr]);
 
 		if (trace_instr) {
 			PRINTF("PC=%08X:[%08X] %-21s ",pc, ir, mnemonic(ir)); fflush(stdout);
@@ -711,26 +710,6 @@ uint32_t cpu_step() {
 			switch (dc.funct3) {
 			case RISCV_LD_LW: {
 				valid = (offset % 4) == 0;
-				if (!valid) {
-
-					int xx,y,z;
-					unsigned int uxx,uy,uz;
-					xx = x[dc.rs1];
-					y =(dc.simm_S);
-					z  = xx + y;
-
-					printf("x=%08x, y=%08x, z=%08x\n",xx,y,z);
-
-					uxx =  x[dc.rs1];
-					uy = (dc.simm_S);
-					uz  = uxx + uy;
-					printf("ux=%08x, uy=%08x, uz=%08x\n",uxx,uy,uz);
-
-					fprintf(stderr, "Unaligned read not supported x=%08X, imm=%08X, laddr=%016lX, waddr=%08X\n", x[dc.rs1], dc.simm_I, addr,waddr) ;
-					valid = false;
-					break;
-				}
-
 				write_reg(x, rd, cpu_memread_u32(addr));
 				break;
 			}
@@ -763,13 +742,7 @@ uint32_t cpu_step() {
 		case RISCV_SYS: {
 			csridx = dc.imm_I;
 			tmp = csr[csridx];
-			if (csridx==RISCV_CSR_MCYCLE) {
-				printf("mcycle=%08X\n",tmp);
 
-			}
-			if (csridx==RISCV_CSR_MINSTRET) {
-				printf("msnsn=%08X\n",tmp);
-			}
 
 			switch (dc.funct3) {
 			case RISCV_SYS_ECALL_EBREAK:

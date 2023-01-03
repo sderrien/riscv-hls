@@ -27,7 +27,7 @@ int putchar(int c) {
 }
 
 
-unsigned int x = 15,y;
+unsigned int x = 1843 ,y;
 
 int main(int argc, char **argv) {
 

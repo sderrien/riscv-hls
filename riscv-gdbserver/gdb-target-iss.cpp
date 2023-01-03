@@ -25,6 +25,8 @@ pthread_t iss_thread;
 extern bool halted;
 bool interrupt= false;
 
+extern bool verbose;
+
 void write_to_stdout(int data) {
 	printf("%c",data);fflush(stdout);
 }
@@ -32,23 +34,23 @@ void write_to_stdout(int data) {
 extern bool trace_instr;
 
 bool server_init_device(const char *device) {
-	printf("Mocking device %s for ISS simulator \n", device);
+	if (verbose) printf("Mocking device %s for ISS simulator \n", device);
 	trace_instr= false;
 	return true;
 }
 
 void* cpu_thread(void* arg) {
 	halted=false;
-	printf("Starting CPU thread from PC=%08XC\n",cpu_getpc());
+	if (verbose) printf("Starting CPU thread from PC=%08XC\n",cpu_getpc());
 	while(!halted) {
 		cpu_step();
 		if (interrupt) {
 			halted=true;
-			printf("Exiting ISS thread due to CTRL-C\n");
+			if (verbose) printf("Exiting ISS thread due to CTRL-C\n");
 		}
 	}
 	if (halted) {
-		printf("Exiting ISS thread due to breakpoint or exception\n");
+		if (verbose) printf("Exiting ISS thread due to breakpoint or exception\n");
 	}
 	pthread_exit(arg);
 }
@@ -85,11 +87,11 @@ uint32_t debug_step() {
 
 //int pthread_create(pthread_t *restrict tidp, const pthread_attr_t *restrict attr, void *(*start_rtn)(void), void *restrict arg)
 uint32_t debug_halt() {
-	printf("Sending interrupt to ISS thread\n");
+	if (verbose) printf("Sending interrupt to ISS thread\n");
 	interrupt = true;
 	pthread_join(iss_thread, NULL);
 	interrupt = true;
-	printf("ISS and gdbserver threads synched\n");
+	if (verbose) printf("ISS and gdbserver threads synched\n");
 	return 1;
 }
 

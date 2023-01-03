@@ -21,10 +21,7 @@ $(PROG).bin : $(PROG).elf
 	genrom $(PROG).bin ../../riscv-core/src/rom.h
 	
 $(PROG).elf : $(OBJS)    
-	$(CC) -g -static -nostartfiles -o $(PROG).elf -Tlink.ld -Wl,-gc-sections $(OBJS)    
-#-lm -lgcc 
-#$(PROG)-libc.elf : $(OBJS)    
-#	$(CC) -g -static -nostdlib -nostartfiles -o $(PROG).elf -lm -lgcc -Tlink.ld -Wl,-gc-sections $(OBJS)    
+	$(CC) -g -static -nostartfiles -o $(PROG).elf -lgcc -Tlink.ld -Wl,-gc-sections $(OBJS)    
 
 $(PROG).o : $(PROG).c
 	$(CC) -c -I./include/ -g -o $(PROG).o $(PROG).c 
