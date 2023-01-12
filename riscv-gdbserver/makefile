@@ -1,37 +1,39 @@
-CFLAGS= -g -O0 -I./
+CFLAGS= -g -O0 -I./ -I../riscv-core/src -Wc++11-compat-deprecated-writable-strings
+
+BINDIR= ../bin/
 
 PROGS = \
 	$(BINDIR)/gdb-server-pipe \
 	$(BINDIR)/gdb-server-iss \
-	$(BINDIR)/gdb-server-uart 
-#	\
-#	$(BINDIR)/uart_client-pipe \
-#	$(BINDIR)/uart_client-uart \
-#	$(BINDIR)/uart_test
-
-BINDIR= ../bin/
-
+	$(BINDIR)/gdb-server-uart \
+	$(BINDIR)/server-test-pipe \
+	$(BINDIR)/server-test-uart \
+	$(BINDIR)/mock-gdbserver-pipe \
+	$(BINDIR)/client-test-pipe 
+	
 all: $(PROGS)
+
+$(BINDIR)/client-test-pipe: client-test.cpp channels.cpp channels-pipe.cpp
+	g++ $(CFLAGS) -g -O0 -o $@ $^
+
+$(BINDIR)/server-test-pipe: server-test.cpp channels.cpp channels-pipe.cpp
+	g++ $(CFLAGS) -g -O0 -o $@ $^
+
+$(BINDIR)/server-test-uart: server-test.cpp channels.cpp channels-uart.cpp
+	g++ $(CFLAGS) -g -O0 -o $@ $^
 
 $(BINDIR)/gdb-server-iss : gdb-server.cpp gdb-target-iss.cpp ../riscv-core/src/riscv-iss.cpp ../riscv-core/src/asm.cpp ../riscv-core/src/rom.h
 	g++ $(CFLAGS) -g -O0 -pthread -o  $@ gdb-server.cpp gdb-target-iss.cpp ../riscv-core/src/riscv-iss.cpp ../riscv-core/src/asm.cpp
 
-$(BINDIR)/gdb-server-pipe : gdb-server.cpp gdb-target-pipe.cpp gdb-target-common.cpp
+$(BINDIR)/gdb-server-pipe : gdb-server.cpp channels.cpp channels-pipe.cpp gdb-target-core.cpp
 	g++ $(CFLAGS) -g -O0 -o $@ $^
 	
-$(BINDIR)/gdb-server-uart : gdb-server.cpp gdb-target-uart.cpp gdb-target-common.cpp
+$(BINDIR)/gdb-server-uart : gdb-server.cpp channels.cpp channels-uart.cpp gdb-target-core.cpp
+	g++ $(CFLAGS) -g -O0 -o $@ $^
+
+$(BINDIR)/mock-gdbserver-pipe : mock-gdb-server.cpp channels.cpp channels-pipe.cpp gdb-target-core.cpp
 	g++ $(CFLAGS) -g -O0 -o $@ $^
 	
-
-#$(BINDIR)/uart_client-pipe: uart_client.cpp gdb-target-pipe.cpp gdb-target-common.cpp
-#	g++ $(CFLAGS) -g -O0 -o $@ $^
-#
-#$(BINDIR)/uart_client-uart: uart_client.cpp gdb-target-uart.cpp gdb-target-common.cpp
-#	g++ $(CFLAGS) -g -O0 -o $@ $^
-#
-#$(BINDIR)/uart_test: uart_test.cpp 
-#	g++ $(CFLAGS) -g -O0 -o $@ $^
-
 clean:
 	rm  $(PROGS)
 		

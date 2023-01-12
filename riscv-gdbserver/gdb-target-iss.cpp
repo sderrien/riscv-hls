@@ -17,93 +17,119 @@
 #include <pthread.h>
 #include <gdb-server.h>
 #include <gdb-target.h>
-
-
-#define MEMSIZE 0x10000
-
+#include <riscv-iss.h>
 
 
 
-int cpu_load(uint32_t addr) ;
-void cpu_store(uint32_t addr,uint8_t data) ;
-int cpu_getreg(uint16_t id);
-int cpu_setreg(uint16_t id,uint32_t value);
-
-
-pthread_t id[2];
+pthread_t iss_thread;
 extern bool halted;
 bool interrupt= false;
-bool init_device(char *device) {
-	printf("Mocking device %s for ISS simulator \n", device);
+
+extern bool verbose;
+
+void write_to_stdout(int data) {
+	printf("%c",data);fflush(stdout);
+}
+
+extern bool trace_instr;
+
+bool server_init_device(const char *device) {
+	if (verbose) printf("Mocking device %s for ISS simulator \n", device);
+	trace_instr= false;
 	return true;
 }
 
 void* cpu_thread(void* arg) {
 	halted=false;
+	if (verbose) printf("Starting CPU thread from PC=%08XC\n",cpu_getpc());
 	while(!halted) {
-		cpu_step(false);
-		if (interrupt) break;
+		cpu_step();
+		if (interrupt) {
+			halted=true;
+			if (verbose) printf("Exiting ISS thread due to CTRL-C\n");
+		}
 	}
-	printf("Exiting thread\n");
+	if (halted) {
+		if (verbose) printf("Exiting ISS thread due to breakpoint or exception\n");
+	}
 	pthread_exit(arg);
 }
 
+
+
+uint32_t debug_reset(){
+	cpu_reset();
+	return 1;
+}
+
+uint32_t debug_get_pc() {
+	return cpu_getpc();
+}
+
 //int pthread_create(pthread_t *restrict tidp, const pthread_attr_t *restrict attr, void *(*start_rtn)(void), void *restrict arg)
-int cpu_run() {
-	pthread_create(&id[0], NULL, cpu_thread,NULL);
+uint32_t debug_run() {
+	pthread_create(&iss_thread, NULL, cpu_thread,NULL);
+	return 1;
+}
+
+//int pthread_create(pthread_t *restrict tidp, const pthread_attr_t *restrict attr, void *(*start_rtn)(void), void *restrict arg)
+uint32_t debug_wait() {
+	pthread_join(iss_thread, NULL);
 	return 1;
 }
 
 
 //int pthread_create(pthread_t *restrict tidp, const pthread_attr_t *restrict attr, void *(*start_rtn)(void), void *restrict arg)
-int cpu_halt() {
-	printf("Halting CPU\n");
+uint32_t debug_step() {
+	cpu_step();
+	return 1;
+}
+
+//int pthread_create(pthread_t *restrict tidp, const pthread_attr_t *restrict attr, void *(*start_rtn)(void), void *restrict arg)
+uint32_t debug_halt() {
+	if (verbose) printf("Sending interrupt to ISS thread\n");
 	interrupt = true;
-	pthread_join(id[0],NULL);
-	interrupt = false;
-	printf("CPU thread synched\n");
-	sleep(2);
+	pthread_join(iss_thread, NULL);
+	interrupt = true;
+	if (verbose) printf("ISS and gdbserver threads synched\n");
 	return 1;
 }
 
 
 
-uint32_t read_reg(uint16_t id) {
+uint32_t debug_read_reg(uint16_t id) {
 	return cpu_getreg(id);
 }
 
-void write_reg(uint16_t id, uint32_t value) {
+void debug_write_reg(uint16_t id, uint32_t value) {
 	cpu_setreg(id, value);
 }
 
-uint8_t read_mem(uint32_t addr)  {
-	return cpu_load(addr);
+uint8_t debug_read_mem(uint32_t addr)  {
+	return cpu_memread_u8(addr);
 }
 
-void write_mem(uint32_t addr, uint8_t data)  {
-	cpu_store(addr, data);
+void debug_write_mem(uint32_t addr, uint8_t data)  {
+	cpu_memwrite_u8(addr, data);
 }
 
-void write_insn(uint32_t addr, uint32_t value) {
+void debug_write_insn(uint32_t addr, uint32_t value) {
 	if ((addr%4)!=0) {
 		printf("Unaligned insn write\n");
 		exit(-1);
 	} else {
-		cpu_store(addr,value);
-		cpu_store(addr+1,value>>8);
-		cpu_store(addr+2,value>>16);
-		cpu_store(addr+3,value>>24);
+		cpu_memwrite_u32(addr,value);
 	}
 }
 
-uint32_t read_insn(uint32_t addr) {
-	return  cpu_load(addr) |
-			cpu_load(addr+1)<<8 |
-			cpu_load(addr+1)<<16 |
-			cpu_load(addr+1)<<24 ;
-			;
+uint32_t debug_read_insn(uint32_t addr) {
+	return cpu_memread_u32(addr);
 }
 
-bool is_valid_addr(uint32_t addr) {
+bool debug_is_valid_addr(uint32_t addr) {
 	return true;
+}
+
+int debug_add_hw_bkpt(unsigned int addr) {
+	return add_hw_bkpt(addr);
 }

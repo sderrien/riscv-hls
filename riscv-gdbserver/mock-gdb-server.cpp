@@ -11,7 +11,13 @@ typedef int64_t i64;
 typedef uint8_t u8;
 typedef uint16_t u16;
 
-#include "gdb-target.h"
+#include <gdb-target.h>
+#include <riscv-debug.h>
+#include <pthread.h>
+#include <gdb-server.h>
+#include <gdb-target.h>
+#include <riscv-iss.h>
+
 
 #include<stdlib.h>
 #include<signal.h>
@@ -29,9 +35,10 @@ typedef uint16_t u16;
 #include <sys/select.h>
 #include <termios.h>
 
+#include <channels.h>
+
 struct termios orig_termios;
 
-bool init_device(char *device);
 
 void reset_terminal_mode() {
 	tcsetattr(0, TCSANOW, &orig_termios);
@@ -68,7 +75,7 @@ int getch() {
 	}
 }
 
-void flush();
+//void flush();
 
 int main(int argc,  char *argv[]) {
 
@@ -79,14 +86,17 @@ int main(int argc,  char *argv[]) {
 	uint32_t addr, data;
 	bool success ;
 	if (argc!=2) {
-		success = init_device("/dev/ttyUSB1");
+		success = server_init_device("/dev/ttyUSB1");
 	} else {
-		success = init_device(argv[1]);
+		success = server_init_device(argv[1]);
 	}
-	if (!success) exit(-1);
+	if (!success) {
+		exit(-1);
+	}
+	printf("Debug client \n ");
 	set_conio_terminal_mode();
 	while (1) {
-		flush();
+		//flush();
 		if (kbhit()) {
 			int c = getch();
 
@@ -97,15 +107,15 @@ int main(int argc,  char *argv[]) {
 				break;
 			}
 			case STEP: {
-				printf("PC=%08x\r\n",cpu_step(false));
+				printf("PC=%08x\r\n",debug_step());
 				break;
 			}
 			case HALT: {
-				cpu_halt();
+				debug_halt();
 				break;
 			}
 			case RUN: {
-				cpu_run();
+				debug_run();
 				break;
 			}
 			case WRITE_MEM: {
@@ -114,14 +124,14 @@ int main(int argc,  char *argv[]) {
 				scanf("%d", &addr);
 				fflush(stdin);
 				scanf("%d", &data);
-				write_mem(addr, data);
+				debug_write_mem(addr, data);
 				break;
 			}
 			case READ_MEM: {
 				printf("Reading MEM\r\n");
 				fflush(stdin);
 				scanf("%d", &addr);
-				data = read_mem(addr);
+				data = debug_read_mem(addr);
 				printf("mem[%d]=%08X\r\n", addr, data);
 				break;
 			}
@@ -132,7 +142,7 @@ int main(int argc,  char *argv[]) {
 				fflush(stdin);
 				scanf("%d", &data);
 				printf("Writing x[%02X]=%08X\r\n",addr,data);
-				write_reg(addr, data);
+				debug_write_reg(addr, data);
 				break;
 			}
 			case READ_REG: {
@@ -141,7 +151,7 @@ int main(int argc,  char *argv[]) {
 				fflush(stdin);
 				scanf("%d", &addr);
 				printf("Reading x[%d]=", addr);fflush(stdout);
-				data = read_reg(addr);
+				data = debug_read_reg(addr);
 				printf("%08X\r\n", data);fflush(stdout);
 				break;
 			}
@@ -150,7 +160,7 @@ int main(int argc,  char *argv[]) {
 				fflush(stdout);
 				fflush(stdin);
 				scanf("%d", &addr);
-				data = read_reg(addr);
+				data = debug_read_reg(addr);
 				printf("x[%d]=%08X\r\n", addr, data);
 				break;
 			}
@@ -159,7 +169,7 @@ int main(int argc,  char *argv[]) {
 				fflush(stdout);
 				fflush(stdin);
 				scanf("%d", &addr);
-				data = read_reg(addr);
+				data = debug_read_reg(addr);
 				printf("x[%d]=%08X\r\n", addr, data);
 				break;
 			}

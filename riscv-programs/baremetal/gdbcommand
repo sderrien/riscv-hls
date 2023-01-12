@@ -1,0 +1,4 @@
+file baremetal/baremetal.elf
+target remote:1234
+load baremetal/baremetal.elf
+si

@@ -12,9 +12,9 @@
 
 #include <asm.h>
 #include <rvi32.h>
+#include <riscv-iss.h>
 
 
-#define MEMSIZE 256
 
 unsigned int addr32(unsigned int pc) {
 	return (pc >> 2) % MEMSIZE;
@@ -26,10 +26,10 @@ int loadbinary(char *filename, unsigned int *mem) {
 	f = fopen(filename, "r");
 	i = 0;
 	if (f != NULL) {
-		while (!feof(f) && i < MEMSIZE) {
+		while (!feof(f) && i < (MEMSIZE/4)) {
 			unsigned int v;
 			fread(&v, 4, 1, f);
-			printf("%08X\n",v);
+			//printf("%08X\n",v);
 			mem[i]=v;
 			i++;
 		}
@@ -41,8 +41,7 @@ int loadbinary(char *filename, unsigned int *mem) {
 }
 
 int main(int argc, char **argv) {
-	unsigned int imem[MEMSIZE] = { 0xdeadbeef };
-	unsigned int gdmem[MEMSIZE] = { 0 };
+	unsigned int imem[MEMSIZE/4] = { 0xdeadbeef };
 	if (argc == 3) {
 		int i;
 		printf("Loading input program file '%s'\n", argv[1]);
@@ -58,7 +57,7 @@ int main(int argc, char **argv) {
 		fprintf(f,"#error binary image does not fit memory \n");
 		fprintf(f,"#endif\n");
 
-		fprintf(f,"unsigned int memw[MEMSIZE]= {");
+		fprintf(f,"unsigned int memw[MEMSIZE/4]= {");
 		for (int i=0;i<size;i++) {
 			unsigned int ir = imem[i];
 			if (i>0) fprintf(f,",");

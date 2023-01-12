@@ -1,0 +1,5 @@
+file testmod/testmod.elf
+
+target remote:1234
+load testmod/testmod.elf
+si

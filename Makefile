@@ -11,6 +11,7 @@ elf:
 	
 gdb:
 	make -C ./riscv-gdbserver
+	make -C ./riscv-core/src/
 	
 hls: 
 	make -C ./riscv-core/hls 
@@ -53,5 +54,8 @@ rdebug: rgdb
 	riscv32-unknown-elf-gdb ../riscv-programs/example.elf --ex='target $(REMOTE_HOST):1234'
 	
 debug:
-	gdb-server-iss 
-	riscv32-unknown-elf-gdb ../riscv-programs/example.elf --ex='target remote:1234'
+	open -a Terminal ./bin/gdb-server-iss 
+	riscv32-unknown-elf-gdb ./riscv-programs/example.elf --ex='break main' --ex='target remote:1234'
+	
+runsim:
+	

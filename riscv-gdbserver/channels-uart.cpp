@@ -16,31 +16,15 @@
 #include <sys/ioctl.h>
 int tty;
 
+
 #define UART_BAUDRATE B115200
 
-FILE *in_trace , *out_trace = NULL;
-
-void trace_out(unsigned char value) {
-	if (out_trace == NULL) {
-		out_trace  = fopen("uart_server_out.txt", "w");
-		if (out_trace  == NULL)
-			exit(-2);
-	}
-	fprintf(out_trace , "%c", (char ) value);
-	fflush(out_trace );
+bool client_init_device(const char *device) {
+	// Nothing to do
+	return true;
 }
 
-void trace_in(unsigned char value) {
-	if (in_trace == NULL) {
-		in_trace  = fopen("uart_server_in.txt", "w");
-		if (in_trace  == NULL)
-			exit(-2);
-	}
-	fprintf(in_trace , "%c", (char ) value);
-	fflush(in_trace );
-}
-
-bool init_device(char *device) {
+bool server_init_device(const char *device) {
 	printf("Opening TTY device %s\n", device);
 	tty = open(device, O_RDWR | O_RDWR | O_NOCTTY);
 	if (tty < 0) {
@@ -76,32 +60,3 @@ bool init_device(char *device) {
 	return true;
 }
 
-
-bool has_byte() {
-	int bytes;
-	ioctl(tty, FIONREAD, &bytes);
-	return bytes>1;
-}
-
-int read_byte() {
-	unsigned char c;
-	do {
-		int hasbyte = (read(tty, &c, sizeof(char))==1) ;
-		if (hasbyte<0) {
-			fprintf(stderr,"Error tty\n");
-			exit(-1);
-		}
-		trace_in(c);
-		if ((c&0x80)==0) {
-			return c;
-		} else {
-			printf("stdout: %c",c);
-		}
-	} while(1);
-}
-
-
-void write_byte(unsigned char data) {
-	trace_out(data);
-	write(tty,&data, sizeof(char));
-}

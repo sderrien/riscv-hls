@@ -53,6 +53,8 @@
 //#include "icache-model.h"
 #include <gdb-server.h>
 #include <gdb-target.h>
+#include <riscv-iss.h>
+#include <channels.h>
 
 /* Define to log each packet */
 #define RSP_TRACE  0
@@ -66,6 +68,14 @@
 #define NUM_REGS    (MAX_GRPS+1)	/*!< Total GDB registers */
 
 #define CTRLC 0x3
+
+bool verbose = false;
+
+#define DEBUG(...)
+//#define DEBUG(...) { printf( __VA_ARGS__) ; fflush(stdout); }
+
+
+
 
 /*! Definition of GDB target signals. Data taken from the GDB 6.8
  source. Only those we use defined here. */
@@ -149,8 +159,6 @@ static void rsp_write_mem_bin(struct rsp_buf *buf);
 static void rsp_remove_matchpoint(struct rsp_buf *buf);
 static void rsp_insert_matchpoint(struct rsp_buf *buf);
 
-extern uint32_t get_pc();
-void set_pc(uint32_t val);
 
 /*---------------------------------------------------------------------------*/
 /*!Initialize the Remote Serial Protocol connection
@@ -380,10 +388,7 @@ static void rsp_client_request() {
 		return;
 	}
 
-#if RSP_TRACE
-	printf("Packet received %s: %d chars\n", buf->data, buf->len);
-	fflush(stdout);
-#endif
+	DEBUG("Packet received %s: %d chars\n", buf->data, buf->len);
 
 	switch (buf->data[0]) {
 	case '!':
@@ -392,7 +397,7 @@ static void rsp_client_request() {
 		return;
 
 	case CTRLC:
-		cpu_halt();
+		debug_halt();
 		rsp_trap();
 		return;
 	case '?':
@@ -696,6 +701,8 @@ static void put_str_packet(const char *str) {
 
 void rsp_trap() {
 	put_str_packet("S05");
+	fprintf(stderr, "Sending trap\n");
+
 }
 
 /*---------------------------------------------------------------------------*/
@@ -728,7 +735,7 @@ get_packet() {
 		 characters */
 		ch = get_rsp_char();
 		if (ch==CTRLC) {
-			printf("gdbserver received break sequence\n");
+			DEBUG("gdbserver received break sequence\n");
 			buf.data[0]=ch;
 			return &buf;
 
@@ -1229,14 +1236,14 @@ static void rsp_continue(struct rsp_buf *buf) {
 	unsigned long int addr; /* Address to continue from, if any */
 
 	if (0 == strcmp("c", buf->data)) {
-		addr = get_pc(); /* Default uses current NPC */
+		addr = debug_get_pc(); /* Default uses current NPC */
 	} else if (1 != sscanf(buf->data, "c%lx", &addr)) {
 		fprintf(stderr,
 				"Warning: RSP continue address %s not recognized: ignored\n",
 				buf->data);
-		addr = get_pc(); /* Default uses current NPC */
+		addr = debug_get_pc(); /* Default uses current NPC */
 	}
-	printf("Continue command unsupported\n");
+	DEBUG("Continue command unsupported\n");
 
 	//rsp_continue_generic (addr, EXCEPT_NONE);
 	rsp.stalled = 0;
@@ -1316,12 +1323,12 @@ static void rsp_read_all_regs() {
 	/* The GPRs */
 //	fprintf(stdout, "Reading regs \n", r, &(buf.data[r * 8]));
 	for (r = 0; r < MAX_GPRS; r++) {
-		uint32_t reg = read_reg((uint16_t) r);
+		uint32_t reg = debug_read_reg((uint16_t) r);
 		reg2hex(reg, &(buf.data[r * 8]));
 //		fprintf(stdout, "x[%d]=%s;", r, &(buf.data[r * 8]));
 	}
 	// Get the adjusted PC
-	uint32_t pc =read_reg(32);
+	uint32_t pc =debug_read_reg(32);
 //	fprintf(stdout, "pc=%08X\n", pc);
 	reg2hex(pc, &(buf.data[r * 8]));
 //	fprintf(stdout, "pc=%08X:%s\n", pc,&(buf.data[r * 8]));
@@ -1421,7 +1428,7 @@ static void rsp_read_mem(struct rsp_buf *buf) {
 		unsigned char ch; /* The byte at the address */
 
 		/* Check memory area is valid */
-		if (!is_valid_addr(addr + off)) {
+		if (!debug_is_valid_addr(addr + off)) {
 			/* The error number doesn't matter. The GDB client will substitute
 			 its own */
 			put_str_packet("E01");
@@ -1431,7 +1438,7 @@ static void rsp_read_mem(struct rsp_buf *buf) {
 		// Get the memory direct - no translation.
 		//ch = eval_direct8 (addr + off, 0, 0);
 		//fprintf(stderr, "Trying to read %x\n", addr+off);
-		ch = read_mem(addr + off);
+		ch = debug_read_mem(addr + off);
 
 		//printf("received %02X\n",ch);
 		////memcpy(&buf->data[off*2], ch, 1);
@@ -1508,7 +1515,7 @@ static void rsp_write_mem(struct rsp_buf *buf) {
 
 	/* Write the bytes to memory */
 	for (off = 0; off < len; off++) {
-		if (!is_valid_addr(addr + off)) {
+		if (!debug_is_valid_addr(addr + off)) {
 			/* The error number doesn't matter. The GDB client will substitute
 			 its own */
 			put_str_packet("E01");
@@ -1517,7 +1524,7 @@ static void rsp_write_mem(struct rsp_buf *buf) {
 			unsigned char nyb1 = hex(symdat[off * 2]);
 			unsigned char nyb2 = hex(symdat[off * 2 + 1]);
 
-			write_mem(addr + off, (nyb1 << 4) | nyb2);
+			debug_write_mem(addr + off, (nyb1 << 4) | nyb2);
 
 			///* circumvent the read-only check usually done for mem accesses
 			//   data is in host order, because that's what set_direct32 needs
@@ -1558,7 +1565,7 @@ static void rsp_read_reg(struct rsp_buf *buf) {
 
 	/* Get the relevant register */
 	if (regnum < MAX_GPRS) {
-		reg2hex(read_reg(regnum), buf->data);
+		reg2hex(debug_read_reg(regnum), buf->data);
 	} else {
 		/* Error response if we don't know the register */
 		fprintf(stderr, "Warning: Attempt to read unknown register 0x%x: "
@@ -1598,7 +1605,7 @@ static void rsp_write_reg(struct rsp_buf *buf) {
 
 	/* Set the relevant register */
 	if (regnum < MAX_GPRS+1) {
-		write_reg(regnum, hex2reg(valstr));
+		debug_write_reg(regnum, hex2reg(valstr));
 	} else {
 		/* Error response if we don't know the register */
 		fprintf(stderr, "Warning: Attempt to write unknown register 0x%x: "
@@ -1873,7 +1880,7 @@ static void rsp_query(struct rsp_buf *buf) {
 static void rsp_restart() {
 	//set_npc (rsp.start_addr);
 	//cpu.gpr[15] = rsp.start_addr;
-	cpu_reset();
+	debug_reset();
 
 } /* rsp_restart () */
 
@@ -1889,14 +1896,14 @@ static void rsp_step(struct rsp_buf *buf) {
 	unsigned long int addr; /* The address to step from, if any */
 
 	if (0 == strcmp("s", buf->data)) {
-		addr = get_pc(); /* Default uses current NPC */
+		addr = debug_get_pc(); /* Default uses current NPC */
 	} else if (1 != sscanf(buf->data, "s%lx", &addr)) {
 		fprintf(stderr,
 				"Warning: RSP step address %s not recognized: ignored\n",
 				buf->data);
-		addr = get_pc(); /* Default uses current NPC */
+		addr = debug_get_pc(); /* Default uses current NPC */
 	}
-	printf("STEP %08x\n",addr);
+	if (verbose) printf("STEP %08lx\n",addr);
 
 	//cpu_step(false);
 	// TODO call step here
@@ -1968,7 +1975,7 @@ static void rsp_step(struct rsp_buf *buf) {
  @param[in] buf  The request                                               */
 /*---------------------------------------------------------------------------*/
 static void rsp_vpkt(struct rsp_buf *buf) {
-	printf("packet %s\n",buf->data);
+	DEBUG("packet %s\n",buf->data);
 	if (0 == strncmp("vAttach;", buf->data, strlen("vAttach;"))) {
 		/* Attaching is a null action, since we have no other process. We just
 		 return a stop packet (using TRAP) to indicate we are stopped. */
@@ -1983,22 +1990,25 @@ static void rsp_vpkt(struct rsp_buf *buf) {
 		if (0 == strncmp("vCont;s", buf->data, strlen("vCont;s"))) {
 			rsp.stalled = 1;
 			rsp.stepping = 1;
-			cpu_step(false);
+			debug_step();
 			put_str_packet("OK");
 			put_str_packet("S05");
 		} else if (0 == strncmp("vCont;c", buf->data, strlen("vCont;c"))) {
 			rsp.stalled = 1;
 			rsp.stepping = 0;
-			printf("continue\n");
+			if (verbose) printf("continue\n");
 			put_str_packet("OK");
-			cpu_run();
+			debug_run();
+			if (verbose) printf("End of continue\n");
 			put_str_packet("S05");
+			debug_wait();
+			rsp_trap();
 		}
 		return;
 	} else if (0 == strncmp("vCtrlC", buf->data, strlen("vCtrlC"))) {
 		fprintf(stderr, "Unsupported command %s\n", buf->data);
 		/* For now we don't support this. */
-		cpu_halt();
+		debug_halt();
 		rsp.stalled = 1;
 		rsp.stepping = 0;
 		return;
@@ -2037,8 +2047,7 @@ static void rsp_vpkt(struct rsp_buf *buf) {
 		rsp_restart();
 		put_str_packet("S05");
 	} else {
-		fprintf(stderr, "Warning: Unknown RSP 'v' packet type %s: ignored\n",
-				buf->data);
+		fprintf(stderr, "Warning: Unknown RSP 'v' packet type %s: ignored\n",buf->data);
 		put_str_packet("OK");
 		return;
 	}
@@ -2090,7 +2099,7 @@ static void rsp_write_mem_bin(struct rsp_buf *buf) {
 
 	/* Write the bytes to memory */
 	for (off = 0; off < len; off++) {
-		if (!is_valid_addr(addr + off)) {
+		if (!debug_is_valid_addr(addr + off)) {
 			/* The error number doesn't matter. The GDB client will substitute
 			 its own */
 			put_str_packet("E01");
@@ -2104,7 +2113,7 @@ static void rsp_write_mem_bin(struct rsp_buf *buf) {
 			//ic_inv (addr + off);
 			//set_program8 (addr + off, bindat[off]);
 			//memcpy(&flash[addr+off], &bindat[off], len);
-			write_mem(addr + off, bindat[off]);
+			debug_write_mem(addr + off, bindat[off]);
 		}
 	}
 
@@ -2152,6 +2161,9 @@ static void rsp_remove_matchpoint(struct rsp_buf *buf) {
 	/* Sort out the type of matchpoint */
 	switch (type) {
 	case BP_MEMORY:
+
+		if (verbose) printf("Remove breakpoint from memory at %08X\n",addr);
+
 		/* Memory breakpoint - replace the original instruction. */
 		//addr-=4; //Because of PC
 		mpe = mp_hash_delete(type, addr);
@@ -2161,12 +2173,11 @@ static void rsp_remove_matchpoint(struct rsp_buf *buf) {
 
 		 We make sure both the instruction cache is invalidated first, so that
 		 the write goes through the cache. */
-		//    if (NULL != mpe)
-		//{
-		//  ic_inv (addr);
-		//  set_program32 (addr, mpe->instr);
-		//  free (mpe);
-		//}
+		if (NULL != mpe)
+		{
+		  debug_write_insn(addr, mpe->instr);
+		  free (mpe);
+		}
 		put_str_packet("OK");
 
 		return;
@@ -2238,28 +2249,28 @@ static void rsp_insert_matchpoint(struct rsp_buf *buf) {
 	/* Sort out the type of matchpoint */
 	switch (type) {
 	case BP_MEMORY:
-		printf("Add breakpoint in memory\n");
 		/* Memory breakpoint - substitute a TRAP instruction
 
 		 We make sure th instruction cache is invalidated first, so that the
 		 read and write always work correctly. */
 		//addr -=4; // Because of PC points to 4 ahead.
-		instr = read_insn(addr);
-		printf("Mem[%08X]=%08X",addr,instr);
-		write_insn(addr, EBREAK);
+		if (verbose) printf("Add breakpoint in memory at %08X\n",addr);
+		instr = debug_read_insn(addr);
+		if (verbose) printf("Mem[%08lX]=%08X",addr,instr);
+		debug_write_insn(addr, EBREAK);
 		mp_hash_add(type, addr, instr);
-		printf("=> %08X \n",read_insn(addr));
+		if (verbose) printf("=> %08X \n",debug_read_insn(addr));
 		put_str_packet("OK");
 		return;
 
 	case BP_HARDWARE:
-		printf("Hardware breakpoint not supported\n");
-		add_hw_bkpt(addr);
+		fprintf(stderr,"Hardware breakpoint not supported\n");
+		debug_add_hw_bkpt(addr);
 		put_str_packet(""); /* Not supported */
 		return;
 
 	case WP_WRITE:
-		printf("Add watchpoint\n");
+		fprintf(stderr,"Add watchpoint\n");
 		//if(!(addr == WATCHPOINT_ADDR))
 		//{
 		//  fprintf(stderr, "Watchpoints not supported to addresses other than WATCHPOINT_ADDR.\n");
@@ -2273,12 +2284,12 @@ static void rsp_insert_matchpoint(struct rsp_buf *buf) {
 		return;
 
 	case WP_READ:
-		printf("WP_READ unsupported\n");
+		fprintf(stderr,"WP_READ unsupported\n");
 		put_str_packet(""); /* Not supported */
 		return;
 
 	case WP_ACCESS:
-		printf("WP_ACCESS unsupported\n");
+		fprintf(stderr,"WP_ACCESS unsupported\n");
 		put_str_packet(""); /* Not supported */
 		return;
 
@@ -2301,7 +2312,7 @@ void rsp_check_stall() {
 		rsp.stalled = 1;
 		rsp.stepping = 0;
 		put_str_packet("S05");
-	} else if ( NULL != mp_hash_lookup(BP_MEMORY, (get_pc() & 0xfffffffe))) {
+	} else if ( NULL != mp_hash_lookup(BP_MEMORY, (debug_get_pc() & 0xfffffffe))) {
 		rsp.stalled = 1;
 		rsp.stepping = 0;
 		put_str_packet("S05");
@@ -2333,13 +2344,19 @@ void rsp_check_watch(unsigned int addr) {
 #endif
 }
 
-void init_device(char *device);
+void uart_init_device(const char *device);
 
 int main(int argc, char** argv) {
+
+	for (int k=1;k<argc;k++) {
+		if (strcmp(argv[k], "-verbose")==0) {
+			verbose=true;
+		}
+	}
 	if (argc==2) {
-		init_device(argv[1]);
+		server_init_device(argv[1]);
 	} else {
-		init_device("/dev/ttyUSB1");
+		server_init_device("/dev/ttyUSB1");
 	}
 	rsp_init();
 

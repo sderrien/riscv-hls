@@ -34,7 +34,7 @@ SECTIONS
   .data : { *(.data) }
 
   .sdata : {
-    __global_pointer$ = . + 0x800;
+    __global_pointer$ = . + 0x8000;
     *(.srodata.cst16) *(.srodata.cst8) *(.srodata.cst4) *(.srodata.cst2) *(.srodata*)
     *(.sdata .sdata.* .gnu.linkonce.s.*)
   }

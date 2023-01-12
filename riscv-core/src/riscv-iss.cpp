@@ -10,9 +10,12 @@
 
 #include "asm.h"
 #include "rvi32.h"
+#include "riscv-iss.h"
+#include "gdb-target.h"
 
-#define MEMSIZE 0x10000
-
+#ifndef __SYNTHESIS__
+#include <channels.h>
+#endif
 unsigned int uint32(int x) {
 	return (unsigned int) x;
 }
@@ -21,109 +24,6 @@ unsigned int addr32(unsigned int addr) {
 	return (addr% MEMSIZE) >> 2 ;
 }
 
-unsigned long long cyclecnt = 0;
-
-unsigned int tick() {
-	return cyclecnt;
-}
-
-unsigned int byte_offset(unsigned int pc) {
-	return (pc % 4);
-}
-#define ROM
-#ifdef ROM
-#include "rom.h"
-#else
-uint32_t memw[MEMSIZE / 4] = { 0 };
-unsigned char mem0[MEMSIZE / 4] = { 0 };
-unsigned char mem1[MEMSIZE / 4] = { 0 };
-unsigned char mem2[MEMSIZE / 4] = { 0 };
-unsigned char mem3[MEMSIZE / 4] = { 0 };
-#endif;
-unsigned int iomap[MEMSIZE] = { 0 };
-
-#define NB_HBKPT 32
-struct {
-	unsigned int target;
-	bool active;
-} hbkpt[NB_HBKPT] = {
-		{ 0, false },{ 0, false },{ 0, false },{ 0, false },
-		{ 0, false },{ 0, false },{ 0, false },{ 0, false },
-		{ 0, false },{ 0, false },{ 0, false },{ 0, false },
-		{ 0, false },{ 0, false },{ 0, false },{ 0, false },
-		{ 0, false },{ 0, false },{ 0, false },{ 0, false },
-		{ 0, false },{ 0, false },{ 0, false },{ 0, false },
-		{ 0, false },{ 0, false },{ 0, false },{ 0, false }
-};
-
-unsigned int x[32] = { 0, 0, 0, 0, 0 };
-unsigned int csr[4096] = { 0 };
-bool halted = false;
-unsigned int pc;
-unsigned int insncnt;
-
-
-#ifdef __SYNTHESIS__
-
-#define FFLUSH(...) 0
-#define PRINTF(...) 0
-#define EXIT(a) 0
-void trace_io(unsigned int addr, unsigned int value) {
-}
-
-#else
-
-#define EXIT(c) exit(c)
-
-#define FFLUSH(...) {  fflush(__VA_ARGS__); }
-#define PRINTF(...) { printf( __VA_ARGS__) ; fflush(stdout); }
-#define FPRINTF(...) fprintf( __VA_ARGS__)
-
-FILE *iotrace;
-void trace_io(unsigned int addr, unsigned int value) {
-	if (iotrace == NULL) {
-		iotrace = fopen("iotrace.txt", "w");
-		if (iotrace == NULL)
-			exit(-2);
-	}
-	FPRINTF(iotrace, "%08X/%c\n", (char ) value, (char ) value);
-	PRINTF("io[%08X]=%08X/%c\n", addr, (char ) value, (char ) value);
-	FFLUSH(iotrace);
-}
-#endif
-
-int cpu_load(uint32_t addr) {
-	unsigned int data ;
-	switch (addr%4) {
-		case 0: data=mem0[addr32(addr)]; break;
-		case 1: data=mem1[addr32(addr)]; break;
-		case 2: data=mem2[addr32(addr)]; break;
-		case 3: data=mem3[addr32(addr)]; break;
-	}
-	return data;
-}
-
-void cpu_store(uint32_t addr,uint8_t data) {
-	if (addr < (MEMSIZE)) {
-
-	memw[addr]=data;
-	switch (addr%4) {
-		case 0: mem0[addr32(addr)]= data; break;
-		case 1: mem1[addr32(addr)]= data; break;
-		case 2: mem2[addr32(addr)]= data; break;
-		case 3: mem3[addr32(addr)]= data; break;
-	}
-	} else {
-		PRINTF("Out of bound [%08X]\n",addr);
-	}
-//	PRINTF("[%08X]=%02X ; {%02X,%02X,%02X,%02X}\n",addr,data,
-//			mem0[addr32(addr)],
-//			mem1[addr32(addr)],
-//			mem2[addr32(addr)],
-//			mem3[addr32(addr)]);
-	FFLUSH(stdout);
-
-}
 
 char extract_byte(unsigned int data, unsigned int offset) {
 	switch (offset) {
@@ -151,6 +51,213 @@ short extract_half(unsigned int data, unsigned int offset) {
 		return ((short) (data >> 16));
 	}
 }
+
+
+unsigned long long cyclecnt = 0;
+
+unsigned int tick() {
+	return cyclecnt++;
+}
+
+
+void write_to_stdout(int data);
+
+unsigned int byte_offset(unsigned int addr) {
+	return (addr & 0x3);
+}
+
+#define ROM
+#ifdef ROM
+#include "rom.h"
+#else
+uint32_t memw[MEMSIZE / 4] = { 0 };
+unsigned char mem0[MEMSIZE / 4] = { 0 };
+unsigned char mem1[MEMSIZE / 4] = { 0 };
+unsigned char mem2[MEMSIZE / 4] = { 0 };
+unsigned char mem3[MEMSIZE / 4] = { 0 };
+#endif
+unsigned int iomap[IOSIZE/4] = { 0 };
+
+#define NB_HBKPT 32
+struct {
+	unsigned int target;
+	bool active;
+} hbkpt[NB_HBKPT] = {
+		{ 0, false },{ 0, false },{ 0, false },{ 0, false },
+		{ 0, false },{ 0, false },{ 0, false },{ 0, false },
+		{ 0, false },{ 0, false },{ 0, false },{ 0, false },
+		{ 0, false },{ 0, false },{ 0, false },{ 0, false },
+		{ 0, false },{ 0, false },{ 0, false },{ 0, false },
+		{ 0, false },{ 0, false },{ 0, false },{ 0, false },
+		{ 0, false },{ 0, false },{ 0, false },{ 0, false }
+};
+
+unsigned int x[32] = { 0, 0, 0, 0, 0 };
+unsigned int csr[4096] = { 0 };
+bool halted = false;
+unsigned int pc;
+unsigned int insncnt;
+
+
+#ifdef __SYNTHESIS__
+
+#define FFLUSH(...)
+#define PRINTF(...)
+#define EXIT(a)
+void trace_io(unsigned int addr, unsigned int value) {
+}
+
+#else
+
+#define EXIT(c) exit(c)
+
+
+#define FFLUSH(...) {  fflush(__VA_ARGS__); }
+//#define PRINTF(...)
+#define PRINTF(...) { printf( __VA_ARGS__) ; fflush(stdout); }
+#define FPRINTF(...) fprintf( __VA_ARGS__)
+
+
+FILE *iotrace;
+void trace_io(unsigned int addr, unsigned int value) {
+	if (iotrace == NULL) {
+		iotrace = fopen("iotrace.txt", "w");
+		if (iotrace == NULL)
+			exit(-2);
+	}
+	FPRINTF(iotrace, "%08X/%c\n", (char ) value, (char ) value);
+	PRINTF("io[%08X]=%08X/%c\n", addr, (char ) value, (char ) value);
+	FFLUSH(iotrace);
+}
+#endif
+
+#define DEBUG(...) { PRINTF( __VA_ARGS__)  }
+
+
+int read_byte() ;
+void write_byte(unsigned char data);
+
+
+
+void cpu_iowrite_u8(uint32_t addr,uint8_t data) {
+#ifndef __SYNTHESIS__
+	PRINTF("[unsupported] writing byte %08X to io[%08X]\n", data,addr);
+#else
+	iomap[(addr>>2)%IOSIZE] = data;
+#endif
+	trace_io(addr, data);
+}
+
+
+void cpu_iowrite_u32(uint32_t addr,uint32_t data) {
+#ifndef __SYNTHESIS__
+	switch (addr % IOSIZE) {
+		case 0x4:
+			write_to_stdout(data);
+			break;
+		default:
+			PRINTF("writing word %08X to io[%08X]\n", data,addr % IOSIZE);
+			break;
+	}
+#else
+	iomap[(addr>>2)%IOSIZE] = data;
+#endif
+}
+
+uint8_t cpu_ioread_u8(uint32_t addr) {
+	//PRINTF("Reading byte from io[%08X]\n", addr);
+	return extract_byte(cpu_ioread_u32(addr),byte_offset(addr)) ;
+
+}
+
+uint32_t cpu_ioread_u32(uint32_t addr) {
+#ifndef __SYNTHESIS__
+	switch (addr) {
+		case 0x0:
+			unsigned char c;
+			fflush(stdin);
+			c= getchar();
+			return c;
+			break;
+		default:
+			PRINTF("Reading word from io[%08X]\n", addr);
+			return 0;
+			break;
+	}
+#else
+	return iomap[(addr>>2)%IOSIZE];
+#endif
+}
+
+bool is_io_access(uint32_t addr) {
+	uint32_t tmp = addr&0x80000000;
+	if (tmp!=0) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+uint32_t cpu_memread_u8(uint32_t addr) {
+	unsigned int data ;
+	switch (addr%4) {
+		case 0: data=mem0[addr32(addr)]; break;
+		case 1: data=mem1[addr32(addr)]; break;
+		case 2: data=mem2[addr32(addr)]; break;
+		case 3: data=mem3[addr32(addr)]; break;
+	}
+	return data;
+}
+
+void cpu_memwrite_u8(uint32_t addr,uint8_t data) {
+	if (addr < (MEMSIZE)) {
+
+	//PRINTF("mem[%08X]=%02X\n",addr,data);
+	memw[addr]=data;
+
+	switch (byte_offset(addr)) {
+		case 0: mem0[addr32(addr)]= data; break;
+		case 1: mem1[addr32(addr)]= data; break;
+		case 2: mem2[addr32(addr)]= data; break;
+		case 3: mem3[addr32(addr)]= data; break;
+	}
+	} else {
+		PRINTF("Out of bound [%08X]\n",addr);
+	}
+//	PRINTF("[%08X]=%02X ; {%02X,%02X,%02X,%02X}\n",addr,data,
+//			mem0[addr32(addr)],
+//			mem1[addr32(addr)],
+//			mem2[addr32(addr)],
+//			mem3[addr32(addr)]);
+	FFLUSH(stdout);
+
+}
+
+void cpu_memwrite_u32(uint32_t addr,uint32_t data) {
+	if ((addr % 4)==0) {
+		//FPRINTF(stdout,"Write mem32[%08X]<=%08X",addr,data);
+		mem0[addr32(addr)]= extract_byte(data,0);
+		mem1[addr32(addr)]= extract_byte(data,1);
+		mem2[addr32(addr)]= extract_byte(data,2);
+		mem3[addr32(addr)]= extract_byte(data,3);
+	} else {
+		FPRINTF(stderr,"[Error] Unaligned access [%08X]\n",addr);
+	}
+}
+
+uint32_t cpu_memread_u32(uint32_t addr) {
+	if ((addr % 4)==0) {
+		uint32_t waddr;
+		waddr = addr32(addr);
+		uint32_t data= pack_bytes(mem0[waddr],mem1[waddr],mem2[waddr],mem3[waddr]);
+		//FPRINTF(stdout,"Read mem32[%08X]=>%08X",addr,data);
+		return data;
+	} else {
+		//FPRINTF(stderr,"[Error] Unaligned access [%08X]\n",addr);
+		return 0;
+	}
+}
+
 
 void write_reg(unsigned int x[32], unsigned int rd, int value) {
 	if (rd != 0 && rd < 32) {
@@ -189,7 +296,72 @@ int remove_hw_bkpt(uint32_t addr) {
 	return 0;
 }
 
-uint32_t cpu_step(bool irq) {
+
+int cpu_reset() {
+	pc = 0;
+	for (int k=0;k<32;k++) {
+		x[k]=0;
+	}
+	halted = false;
+	return 1;
+}
+
+uint32_t cpu_getpc() {
+	return pc;
+}
+
+bool is_cpu_halted() {
+	return halted;
+}
+
+
+int cpu_getreg(uint16_t id) {
+	if (id>=0 && id <32) {
+		return x[id];
+	} else if (id==32){
+		return pc;
+	} else if (id<4096 ){
+		return csr[id];
+	} else {
+		printf("error");return -1;
+	}
+}
+
+int cpu_setreg(uint16_t id,uint32_t value) {
+	if (id>0 && id <32) {
+		x[id]=value;
+	} else if (id==32){
+		pc=value;
+	} else {
+		csr[id]=value;
+	}
+	return 1;
+
+}
+
+int cpu_info(uint8_t id) {
+
+	switch(id) {
+		case MISA_INFO:{
+			return EXTENSION_I;
+		}
+		case MVENDOR_INFO:{
+			return 0xCAFE00;
+		}
+	}
+	return 0xDEADBEEF;
+}
+
+uint32_t cpu_run() {
+	do {
+		cpu_step();
+	} while (!is_cpu_halted());
+	return cpu_getpc();
+}
+
+bool irq = false;
+bool trace_instr= true;
+uint32_t cpu_step() {
 
 	char shcpt = -1;
 	unsigned int rs1, rs2, rd, ir;
@@ -203,6 +375,14 @@ uint32_t cpu_step(bool irq) {
 	unsigned int next_pc;
 	unsigned int data;
 	unsigned int hartid =1;
+	unsigned int waddr;
+	unsigned int offset;
+	unsigned int csridx;
+	unsigned int tmp;
+	unsigned int op1;
+	unsigned int op2;
+	bool taken;
+
 	bool valid = false;
 
 	if (match_hbkpt(pc)) {
@@ -214,7 +394,10 @@ uint32_t cpu_step(bool irq) {
 	} else {
 		addr = addr32(pc);
 		ir = pack_bytes(mem0[addr], mem1[addr], mem2[addr], mem3[addr]);
-		PRINTF("MEM[PC=%08X]=%08X, {%08X,%08X,%08X,%08X}\n",pc,ir,mem0[addr], mem1[addr], mem2[addr], mem3[addr]);
+
+		if (trace_instr) {
+			PRINTF("PC=%08X:[%08X] %-21s ",pc, ir, mnemonic(ir)); fflush(stdout);
+		}
 		dc = decode(ir);
 		rd = dc.rd;
 		next_pc = pc + 4;
@@ -235,8 +418,8 @@ uint32_t cpu_step(bool irq) {
 		case RISCV_OPI: {
 			switch (dc.funct3) {
 			case RISCV_OPI_ADDI: {
-				unsigned int op1 = x[dc.rs1];
-				unsigned int op2 = dc.simm_I;
+				op1 = x[dc.rs1];
+				op2 = dc.simm_I;
 				write_reg(x, rd, op1 + op2);
 
 				valid = true;
@@ -268,12 +451,18 @@ uint32_t cpu_step(bool irq) {
 				break;
 			}
 			case RISCV_OPI_SRI: {
-				write_reg(x, rd, (x[dc.rs1] >> dc.simm_I));
+				if ((dc.imm_I&0xF00)!=0) {
+					// SRAI
+					write_reg(x, rd, (((int)x[dc.rs1]) >> dc.simm_I));
+				} else {
+					// SRLI
+					write_reg(x, rd, (x[dc.rs1] >> dc.simm_I));
+				}
 				valid = true;
 				break;
 			}
 			case RISCV_OPI_SLLI: {
-				write_reg(x, rd, (x[dc.rs1] << dc.simm_I));
+				write_reg(x, rd, (x[dc.rs1] << (dc.simm_I)));
 				valid = true;
 				break;
 			}
@@ -365,7 +554,7 @@ uint32_t cpu_step(bool irq) {
 				break;
 #else
 					write_reg(x, rd,
-							uint32(x[dc.rs1] >> ((unsigned int) x[dc.rs2])));
+						uint32(x[dc.rs1] >> ((unsigned int) x[dc.rs2])));
 #endif
 					valid = true;
 					break;
@@ -380,7 +569,7 @@ uint32_t cpu_step(bool irq) {
 		}
 #ifndef NO_BRANCH
 		case RISCV_BR: {
-			bool taken = false;
+			taken = false;
 			switch (dc.funct3) {
 			case RISCV_BR_BEQ: {
 				valid = true;
@@ -433,33 +622,32 @@ uint32_t cpu_step(bool irq) {
 #endif
 #ifndef NO_LDST
 		case RISCV_ST: {
-			unsigned int addr = x[dc.rs1] + dc.simm_S;
-			unsigned int waddr = addr32(addr);
-			unsigned int offset = byte_offset(addr);
+			addr= ((int)x[dc.rs1]) + (dc.simm_S);
+			waddr= addr32(addr);
+			offset= byte_offset(addr);
+
 			switch (dc.funct3) {
 			case RISCV_ST_SW: {
 				valid = (offset % 4) == 0;
-				if ((addr > 0xF0000)) {
-					PRINTF("writing %s=%08X to io[%08X]\n", rname(dc.rs2),
-							x[dc.rs2], waddr);
-					iomap[waddr] = x[dc.rs2];
-					trace_io(waddr, x[dc.rs2]);
+				if (!valid)
+					fprintf(stderr, "Unaligned write not supported x=%08X, imm=%08X, addr=%08X\n", (int)(x[dc.rs1]), dc.simm_S, addr) ;
+
+				if (is_io_access(addr)) {
+					if (trace_instr) fprintf(stdout, "IO[%08X+%08X=%08X]", (int)(x[dc.rs1]), dc.simm_S, addr) ;
+					cpu_iowrite_u32(addr, x[dc.rs2]);
 				} else {
-					mem0[waddr] = extract_byte(x[dc.rs2], 0);
-					mem1[waddr] = extract_byte(x[dc.rs2], 1);
-					mem2[waddr] = extract_byte(x[dc.rs2], 2);
-					mem3[waddr] = extract_byte(x[dc.rs2], 3);
+					if (trace_instr) fprintf(stdout, "MEM[%08X+%08X=%08X]", (int)(x[dc.rs1]), dc.simm_S, addr) ;
+					cpu_memwrite_u32(addr, x[dc.rs2]);
 				}
+
 				valid = true;
 				break;
 			}
 			case RISCV_ST_SH: {
 				valid = (offset % 2) == 0;
-				if ((addr > 0xF0000)) {
-					PRINTF("writing %s=%08X to io[%08X]\n", rname(dc.rs2),
-							x[dc.rs2], waddr);
-					iomap[waddr] = x[dc.rs2];
-					trace_io(waddr, x[dc.rs2]);
+				if (is_io_access(addr)) {
+					PRINTF("Unsupported IO SH operation\n");
+					valid=false;
 				} else {
 					switch (offset) {
 					case 0: {
@@ -478,11 +666,9 @@ uint32_t cpu_step(bool irq) {
 			}
 			case RISCV_ST_SB: {
 				valid = (offset % 4) == 0;
-				if ((addr > 0xF0000)) {
-					PRINTF("writing %s=%08X to io[%08X]\n", rname(dc.rs2),
-							x[dc.rs2], waddr);
-					iomap[waddr] = x[dc.rs2];
-					trace_io(waddr, x[dc.rs2]);
+				if (is_io_access(addr)) {
+					cpu_iowrite_u8(addr, data);
+					//getchar();
 				} else {
 					char value;
 					value = extract_byte(x[dc.rs2], 0);
@@ -510,15 +696,21 @@ uint32_t cpu_step(bool irq) {
 		}
 		case RISCV_LD: {
 
-			unsigned int addr = x[dc.rs1] + dc.simm_I;
-			unsigned int waddr = addr32(addr);
-			unsigned int offset = byte_offset(addr);
-			data = pack_bytes(mem0[waddr], mem1[waddr], mem2[waddr],
-					mem3[waddr]);
+			addr= (x[dc.rs1]) +  (dc.simm_I);
+			waddr = addr32(addr);
+			if (trace_instr) fprintf(stdout, "MEM[%d+%d=%d]", (int)(x[dc.rs1]), dc.simm_I, addr) ;
+
+			if (is_io_access(addr)) {
+				fprintf(stderr, "IO read not yet supported x=%08X, imm=%08X, addr=%016llX, waddr=%08X\n", x[dc.rs1], dc.simm_I, addr,waddr) ;
+				valid = false;
+				break;
+			}
+			offset= byte_offset(addr);
+			data = pack_bytes(mem0[waddr], mem1[waddr], mem2[waddr],mem3[waddr]);
 			switch (dc.funct3) {
 			case RISCV_LD_LW: {
 				valid = (offset % 4) == 0;
-				write_reg(x, rd, data);
+				write_reg(x, rd, cpu_memread_u32(addr));
 				break;
 			}
 			case RISCV_LD_LB: {
@@ -528,7 +720,8 @@ uint32_t cpu_step(bool irq) {
 			}
 			case RISCV_LD_LBU: {
 				valid = true;
-				write_reg(x, rd, extract_byte(data, offset));
+				data = (unsigned char) extract_byte(data, offset);
+				write_reg(x, rd, data);
 				break;
 			}
 			case RISCV_LD_LH: {
@@ -547,8 +740,9 @@ uint32_t cpu_step(bool irq) {
 #endif
 #ifndef NO_SYSCALL
 		case RISCV_SYS: {
-			unsigned int csridx;
-			unsigned int tmp;
+			csridx = dc.imm_I;
+			tmp = csr[csridx];
+
 
 			switch (dc.funct3) {
 			case RISCV_SYS_ECALL_EBREAK:
@@ -568,38 +762,26 @@ uint32_t cpu_step(bool irq) {
 				}
 				break;
 			case RISCV_CSRRW:
-				csridx = dc.imm_I;
-				tmp = csr[csridx];
 				csr[csridx] = x[dc.rs1];
 				write_reg(x, rd, tmp);
 				break;
 			case RISCV_CSRRS:
-				csridx = dc.imm_I;
-				tmp = csr[csridx];
 				csr[csridx] = x[dc.rs1] | tmp;
 				write_reg(x, rd, tmp);
 				break;
 			case RISCV_CSRRC:
-				csridx = dc.imm_I;
-				tmp = csr[csridx];
 				csr[csridx] = tmp & (~x[dc.rs1]);
 				write_reg(x, rd, tmp);
 				break;
 			case RISCV_CSRRWI:
-				csridx = dc.imm_I;
-				tmp = csr[csridx];
 				csr[csridx] = dc.rs1;
 				write_reg(x, rd, tmp);
 				break;
 			case RISCV_CSRRSI:
-				csridx = dc.imm_I;
-				tmp = csr[csridx];
 				csr[csridx] = dc.rs1 | tmp;
 				write_reg(x, rd, tmp);
 				break;
 			case RISCV_CSRRCI:
-				csridx = dc.imm_I;
-				tmp = csr[csridx];
 				csr[csridx] = tmp & (~dc.rs1);
 				write_reg(x, rd, tmp);
 				break;
@@ -613,10 +795,12 @@ uint32_t cpu_step(bool irq) {
 
 #endif
 		}
-		PRINTF("PC=%08X:[%08X] %-21s  // %s=%08X,%s=%08X,%s=%08X\n",
-				pc, ir, mnemonic(ir), rname(dc.rd), x[dc.rd],
-				rname(dc.rs1), x[dc.rs1], rname(dc.rs2), x[dc.rs2]);
 
+		if (trace_instr) {
+		PRINTF(" // %s=%08X,%s=%08X,%s=%08X\n",
+				rname(dc.rd), x[dc.rd],
+				rname(dc.rs1), x[dc.rs1], rname(dc.rs2), x[dc.rs2]);
+		}
 		csr[RISCV_CSR_MINSTRET] = insncnt;
 
 		if (valid) {
@@ -639,80 +823,7 @@ uint32_t cpu_step(bool irq) {
 
 }
 
-int cpu_reset() {
-	pc = 0;
-	for (int k=0;k<32;k++) {
-		x[k]=0;
-	}
-}
-
-int get_pc() {
-	return pc;
-}
 
 
-
-int cpu_getreg(uint16_t id) {
-	if (id>=0 && id <32) {
-		return x[id];
-	} else if (id==32){
-		return pc;
-	} else if (id<4096 ){
-		return csr[id];
-	} else {
-		printf("error");return -1;
-	}
-}
-
-int cpu_setreg(uint16_t id,uint32_t value) {
-	if (id>0 && id <32) {
-		x[id]=value;
-	} else if (id==32){
-		pc=value;
-	} else {
-		csr[id]=value;
-	}
-
-}
-
-int cpu_info(uint8_t id) {
-
-	switch(id) {
-		case MISA_INFO:{
-			return EXTENSION_I;
-		}
-		case MVENDOR_INFO:{
-			return 0xCAFE00;
-		}
-	}
-	return 0xDEADBEEF;
-}
-
-
-#pragma toplevel
-int riscv(volatile unsigned int *leds, volatile unsigned int *dbg_pc,
-		volatile bool *irq,
-		volatile unsigned int *dbg_ir, volatile unsigned int iomap[MEMSIZE]) {
-#pragma HLS INTERFACE ap_ctrl_none port=return
-#pragma HLS INTERFACE axis port=irq
-#pragma HLS INTERFACE ap_none port=dbg_pc register
-#pragma HLS INTERFACE ap_none port=dbg_ir register
-//#pragma HLS INTERFACE ap_none port=dbg_cmd register
-#pragma HLS INTERFACE m_axi depth=4 port=iomap bundle=mem
-	int i;
-	cyclecnt = 0;
-	pc = 0;
-#pragma SHLS PIPELINE
-	do {
-		cpu_step(*irq);
-		cyclecnt++;
-#ifndef __SYNTHESIS__
-	} while (cyclecnt < 1024);
-#else
-	} while (true);
-#endif
-	return pc;
-
-}
 
 
