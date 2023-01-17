@@ -1,61 +1,59 @@
+OUTPUT_DIR=bin
+
 REMOTE_PATH=./riscv-hls
 #test-riscv-hls
 
 REMOTE_HOST=sderrien@ubuntu18vm
 
-all:
-	@echo "targets : upload [r]hls [r]program [r]bistream [r]program [r]debug (r for remote)" 
+list:
+	@echo "Targets : upload [r]hls [r]elf [r]bistream [r]program [r]debug (r for remote)"
 
-elf:
-	make -C ./riscv-programs 
+setup:
+	@mkdir -p $(OUTPUT_DIR)
+
+elf: setup
+	$(MAKE) -C riscv-programs 
 	
-gdb:
-	make -C ./riscv-gdbserver
-	make -C ./riscv-core/src/
+gdb: setup
+	$(MAKE) -C riscv-gdbserver
+	$(MAKE) -C riscv-core/src
 	
-hls: 
-	make -C ./riscv-core/hls 
+hls: setup
+	$(MAKE) -C riscv-core/hls 
 
 	
-bitstream: 
-	make -C ./riscv-core/vivado bitstream
+bitstream: setup
+	$(MAKE) -C riscv-core/vivado bitstream
 
-program: 
-	make -C ./riscv-core/vivado program
+program: setup
+	$(MAKE) -C riscv-core/vivado program
 
 
 rgdb:
-	ssh -t sderrien@ubuntu18vm make -C $(REMOTE_PATH) gdb 
+	ssh -t $(REMOTE_HOST) $(MAKE) -C $(REMOTE_PATH) gdb
 
 relf: 
-	ssh -t sderrien@ubuntu18vm make -C $(REMOTE_PATH) elf
+	ssh -t $(REMOTE_HOST) $(MAKE) -C $(REMOTE_PATH) elf
 
 rhls: 
-	ssh -t sderrien@ubuntu18vm make -C $(REMOTE_PATH) hls 
+	ssh -t $(REMOTE_HOST) $(MAKE) -C $(REMOTE_PATH) hls
 
 rprogram: 
-	ssh sderrien@ubuntu18vm make -C $(REMOTE_PATH) program
+	ssh $(REMOTE_HOST) $(MAKE) -C $(REMOTE_PATH) program
 	
 rbitstream: 
-	ssh sderrien@ubuntu18vm make -C $(REMOTE_PATH) bitstream
+	ssh $(REMOTE_HOST) $(MAKE) -C $(REMOTE_PATH) bitstream
 	
 upload:
-	-scp -r ../riscv-hls sderrien@ubuntu18vm:$(REMOTE_PATH)/../
+	-scp -r ../riscv-hls $(REMOTE_HOST):$(REMOTE_PATH)/../
 	
 rsync: 
-	rsync -rav -e ssh --include '*/' \
-	--exclude={'*.o','.git','dir4'} \
-	sderrien@ubuntu18vm:$(REMOTE_PATH) \ 
-	../riscv-hls/	
-	
-	
-rdebug: rgdb
-	ssh sderrien@ubuntu18vm $(REMOTE_PATH)/bin/gdb-server-uart $(DEVICE)
-	riscv32-unknown-elf-gdb ../riscv-programs/example.elf --ex='target $(REMOTE_HOST):1234'
-	
+	rsync -rav -e ssh --include '*/' --exclude={'*.o','.git','dir4'} $(REMOTE_HOST):$(REMOTE_PATH) ../riscv-hls/
+
 debug:
 	open -a Terminal ./bin/gdb-server-iss 
 	riscv32-unknown-elf-gdb ./riscv-programs/example.elf --ex='break main' --ex='target remote:1234'
-	
-runsim:
-	
+
+rdebug: rgdb
+	ssh $(REMOTE_HOST) $(REMOTE_PATH)/bin/gdb-server-uart $(DEVICE)
+	riscv32-unknown-elf-gdb ../riscv-programs/example.elf --ex='target $(REMOTE_HOST):1234'
