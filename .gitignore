@@ -1,3 +1,10 @@
 bin/
 
-_crt.s
+*.s
+!crt.s
+
+*.elf
+*.lst
+*.hex
+*.bin
+*.o
