@@ -3,7 +3,7 @@ PROG=helloworld
 OBJS= crt.o $(PROG).o 
 
 CC=riscv32-unknown-elf-gcc
-CFLAGS=-march=rv32i_zicsr -g -O0
+CFLAGS=-march=rv32i_zicsr -mabi=ilp32 -g -O0
 
 INCLUDES=../include/
 
@@ -28,5 +28,5 @@ crt.o : crt.s
 	$(CC) $(CFLAGS) -I$(INCLUDES) -c -o $@ $^  
 	
 clean:
-	rm *.o *.elf *.hex *.bin *.lst	
+	rm -f *.o *.elf *.hex *.bin *.lst
 	

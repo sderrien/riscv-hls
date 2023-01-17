@@ -22,7 +22,7 @@ $(PROG).bin : $(PROG).elf
 	genrom $(PROG).bin ../../riscv-core/src/rom.h
 	
 $(PROG).elf : $(OBJS)    
-	$(CC) -g -static -nostartfiles -o $(PROG).elf -lgcc -Tlink.ld -Wl,-gc-sections $(OBJS)    
+	$(CC) $(CFLAGS) -static -nostartfiles -o $(PROG).elf -lgcc -Tlink.ld -Wl,-gc-sections $(OBJS)
 
 $(PROG).o : $(PROG).c
 	$(CC) $(CFLAGS) -c -I./include/ -g -o $(PROG).o $(PROG).c 
@@ -43,5 +43,5 @@ debug:
 	../../bin 
 	
 clean:
-	rm *.o *.elf *.hex *.bin *.lst	
+	rm -f *.o *.elf *.hex *.bin *.lst
 	

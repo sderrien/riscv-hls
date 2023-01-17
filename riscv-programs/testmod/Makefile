@@ -37,5 +37,5 @@ debug:
 	../../bin 
 	
 clean:
-	rm *.o *.elf *.hex *.bin *.lst	
+	rm -f *.o *.elf *.hex *.bin *.lst
 	

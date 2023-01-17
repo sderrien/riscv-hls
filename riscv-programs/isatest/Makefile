@@ -25,5 +25,5 @@ $(PROG).o : $(PROG).s
 
 	
 clean:
-	rm *.o *.elf *.hex *.bin *.lst	
+	rm -f *.o *.elf *.hex *.bin *.lst
 	
