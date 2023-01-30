@@ -1191,17 +1191,12 @@ static void hex2ascii(char *dest, char *src) {
 //
 //   @param[in] addr  The address to use */
 ///*---------------------------------------------------------------------------*/
-// static void
-// set_npc (unsigned long int  addr)
-//{
-//   if (cpu_state.pc != addr)
-//     {
-//       cpu_state.pc         = addr;
-//       cpu_state.delay_insn = 0;
-//       pcnext               = addr + 4;
-//     }
-// }	/* set_npc () */
-//
+static void set_npc(unsigned long int addr) {
+  uint32_t pc = debug_read_reg(32);
+  if (pc != addr)
+    debug_write_reg(32, addr);
+} /* set_npc () */
+
 //
 /*---------------------------------------------------------------------------*/
 /*!Send a packet acknowledging an exception has occurred
