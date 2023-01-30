@@ -387,7 +387,6 @@ uint32_t cpu_step() {
     addr = addr32(pc);
     ir = pack_bytes(mem0[addr], mem1[addr], mem2[addr], mem3[addr]);
 
-    PRINTF("pc = 0x%04x\n", pc);
     if (trace_instr)
       PRINTF("PC=%08X:[%08X] %-21s\n", pc, ir, mnemonic(ir));
     dc = decode(ir);
@@ -443,18 +442,17 @@ uint32_t cpu_step() {
         break;
       }
       case RISCV_OPI_SRI: {
-        if ((dc.imm_I & 0xF00) != 0) {
-          // SRAI
-          write_reg(x, rd, (((int)x[dc.rs1]) >> dc.simm_I));
-        } else {
-          // SRLI
-          write_reg(x, rd, (x[dc.rs1] >> dc.simm_I));
-        }
         valid = true;
+        if (dc.funct7 == RISCV_OPI_SRI_SRAI) {
+          write_reg(x, rd, (((int)x[dc.rs1]) >> dc.shamt));
+        } else if (dc.funct7 == RISCV_OPI_SRI_SRLI) {
+          write_reg(x, rd, (x[dc.rs1] >> dc.shamt));
+        } else
+          valid = false;
         break;
       }
       case RISCV_OPI_SLLI: {
-        write_reg(x, rd, (x[dc.rs1] << (dc.simm_I)));
+        write_reg(x, rd, (x[dc.rs1] << (dc.shamt)));
         valid = true;
         break;
       }
