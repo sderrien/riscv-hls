@@ -96,7 +96,7 @@
 /*
  ** MISC-MEM functions
  */
-#define RISCV_MM_FENCE 0x0
+#define RISCV_MM_FENCE 0x0f
 
 /*
  ** SYSTEM functions
@@ -104,6 +104,7 @@
 #define RISCV_SYS_ECALL_EBREAK 0x0
 #define RISCV_SYS_EBREAK 0x1
 #define RISCV_SYS_ECALL 0x0
+#define RISCV_SYS_MRET 0x302
 
 #define RISCV_CSRRW 0x1
 #define RISCV_CSRRS 0x2
@@ -112,88 +113,89 @@
 #define RISCV_CSRRSI 0x6
 #define RISCV_CSRRCI 0x7
 
-//https://five-embeddev.com/riscv-isa-manual/latest/machine.html
-#define RISCV_CSR_MSTATUS  0x300
-#define RISCV_CSR_MISA 	   0x301
-#define RISCV_CSR_MEDELEG  0x302
-#define RISCV_CSR_MIDELEG  0x303
+// https://five-embeddev.com/riscv-isa-manual/latest/machine.html
+#define RISCV_CSR_MSTATUS 0x300
+#define RISCV_CSR_MISA 0x301
+#define RISCV_CSR_MEDELEG 0x302
+#define RISCV_CSR_MIDELEG 0x303
 
-#define RISCV_CSR_MIE     0x304
-#define RISCV_CSR_MTVEC   0x305
+#define RISCV_CSR_MIE 0x304
+#define RISCV_CSR_MTVEC 0x305
 
-#define RISCV_CSR_MEPC    0x341
-#define RISCV_CSR_MCAUSE  0x342
-#define RISCV_CSR_MTVAL   0x343
-#define RISCV_CSR_MIP     0x344
+#define RISCV_CSR_MEPC 0x341
+#define RISCV_CSR_MCAUSE 0x342
+#define RISCV_CSR_MTVAL 0x343
+#define RISCV_CSR_MIP 0x344
 #define RISCV_CSR_MVENDORID 0x344
 #define RISCV_CSR_MARCHID 0x7
 #define RISCV_CSR_MIMPID 0x7
 #define RISCV_CSR_MHARTID 0x7
 
-
 #define MVENDOR_INFO 0x1
 #define MISA_INFO 0x2
 
-
-//https://ibex-core.readthedocs.io/en/latest/03_reference/performance_counters.html
-#define RISCV_CSR_MCYCLE   0xB00
+// https://ibex-core.readthedocs.io/en/latest/03_reference/performance_counters.html
+#define RISCV_CSR_MCYCLE 0xB00
 #define RISCV_CSR_MINSTRET 0xB02
 
 // https://www.linkedin.com/pulse/processor-design-2-introduction-risc-v-simon-southwell/?trk=pulse-article_more-articles_related-content-card
 
-#define IRQ_S_SOFT          1
-#define IRQ_H_SOFT          2
-#define IRQ_M_SOFT          3
-#define IRQ_S_TIMER         5
-#define IRQ_H_TIMER         6
-#define IRQ_M_TIMER         7
-#define IRQ_S_EXT           9
-#define IRQ_H_EXT           10
-#define IRQ_M_EXT           11
-#define IRQ_COP             12
-
+#define IRQ_S_SOFT 1
+#define IRQ_H_SOFT 2
+#define IRQ_M_SOFT 3
+#define IRQ_S_TIMER 5
+#define IRQ_H_TIMER 6
+#define IRQ_M_TIMER 7
+#define IRQ_S_EXT 9
+#define IRQ_H_EXT 10
+#define IRQ_M_EXT 11
+#define IRQ_COP 12
 
 #define EXCEPTION_ECALL_U 8
 #define EXCEPTION_ECALL_S 9
 #define EXCEPTION_ECALL_M 11
 #define EXCEPTION_ILLEGAL_INST 2
-#define EXCEPTION_BKPT         3
+#define EXCEPTION_BKPT 3
 
-#define MCAUSE32_CAUSE       0x7FFFFFFF
-#define MCAUSE32_INT         0x80000000
+#define MCAUSE32_CAUSE 0x7FFFFFFF
+#define MCAUSE32_INT 0x80000000
 
-//instruction!(I: csrrw, opcode::SYSTEM, funct3 0b001);
-//instruction!(I: csrrs, opcode::SYSTEM, funct3 0b010);
-//instruction!(I: csrrc, opcode::SYSTEM, funct3 0b011);
+// instruction!(I: csrrw, opcode::SYSTEM, funct3 0b001);
+// instruction!(I: csrrs, opcode::SYSTEM, funct3 0b010);
+// instruction!(I: csrrc, opcode::SYSTEM, funct3 0b011);
 
-
-
-
-
-
-#define   	EXTENSION_A	0x00000001	      //	Atomic extension
-#define   	EXTENSION_B	0x00000002	      //	Tentatively reserved for Bit-Manipulation extension
-#define   	EXTENSION_C	0x00000004	      //	Compressed extension
-#define   	EXTENSION_D	0x00000008	      //	Double-precision floating-point extension
-#define   	EXTENSION_E	0x00000010	      //	RV32E base ISA
-#define   	EXTENSION_F	0x00000020	      //	Single-precision floating-point extension
-#define   	EXTENSION_G	0x00000040	      //	Reserved
-#define   	EXTENSION_H	0x00000080	      //	Hypervisor extension
-#define   	EXTENSION_I	0x00000100	      //	RV32I/64I/128I base ISA
-#define   	EXTENSION_J	0x00000200	      //	Tentatively reserved for Dynamically Translated Languages extension
-#define   	EXTENSION_K	0x00000400	      //	Reserved
-#define   	EXTENSION_L	0x00000800	      //	Tentatively reserved for Decimal Floating-Point extension
-#define   	EXTENSION_M	0x00001000	      //	Integer Multiply/Divide extension
-#define   	EXTENSION_N	0x00002000	      //	User-level interrupts supported
-#define   	EXTENSION_O	0x00004000	      //	Reserved
-#define   	EXTENSION_P	0x00008000	      //	Tentatively reserved for Packed-SIMD extension
-#define   	EXTENSION_Q	0x00010000	      //	Quad-precision floating-point extension
-#define   	EXTENSION_R	0x00020000	      //	Reserved
-#define   	EXTENSION_S	0x00040000	      //	Supervisor mode implemented
-#define   	EXTENSION_T	0x00080000	      //	Tentatively reserved for Transactional Memory extension
-#define   	EXTENSION_U	0x00100000	      //	User mode implemented
-#define   	EXTENSION_V	0x00200000	      //	Tentatively reserved for Vector extension
-#define   	EXTENSION_W	0x00400000	      //	Reserved
-#define   	EXTENSION_X	0x00800000	      //	Non-standard extensions present
-#define   	EXTENSION_Y	0x01000000	      //	Reserved
-#define   	EXTENSION_Z	0x02000000	      //	Reserved
+#define EXTENSION_A 0x00000001 //	Atomic extension
+#define EXTENSION_B                                                            \
+  0x00000002 //	Tentatively reserved for Bit-Manipulation extension
+#define EXTENSION_C 0x00000004 //	Compressed extension
+#define EXTENSION_D                                                            \
+  0x00000008                   //	Double-precision floating-point extension
+#define EXTENSION_E 0x00000010 //	RV32E base ISA
+#define EXTENSION_F                                                            \
+  0x00000020                   //	Single-precision floating-point extension
+#define EXTENSION_G 0x00000040 //	Reserved
+#define EXTENSION_H 0x00000080 //	Hypervisor extension
+#define EXTENSION_I 0x00000100 //	RV32I/64I/128I base ISA
+#define EXTENSION_J                                                            \
+  0x00000200 //	Tentatively reserved for Dynamically Translated Languages
+             //extension
+#define EXTENSION_K 0x00000400 //	Reserved
+#define EXTENSION_L                                                            \
+  0x00000800 //	Tentatively reserved for Decimal Floating-Point extension
+#define EXTENSION_M 0x00001000 //	Integer Multiply/Divide extension
+#define EXTENSION_N 0x00002000 //	User-level interrupts supported
+#define EXTENSION_O 0x00004000 //	Reserved
+#define EXTENSION_P                                                            \
+  0x00008000                   //	Tentatively reserved for Packed-SIMD extension
+#define EXTENSION_Q 0x00010000 //	Quad-precision floating-point extension
+#define EXTENSION_R 0x00020000 //	Reserved
+#define EXTENSION_S 0x00040000 //	Supervisor mode implemented
+#define EXTENSION_T                                                            \
+  0x00080000 //	Tentatively reserved for Transactional Memory extension
+#define EXTENSION_U 0x00100000 //	User mode implemented
+#define EXTENSION_V                                                            \
+  0x00200000                   //	Tentatively reserved for Vector extension
+#define EXTENSION_W 0x00400000 //	Reserved
+#define EXTENSION_X 0x00800000 //	Non-standard extensions present
+#define EXTENSION_Y 0x01000000 //	Reserved
+#define EXTENSION_Z 0x02000000 //	Reserved

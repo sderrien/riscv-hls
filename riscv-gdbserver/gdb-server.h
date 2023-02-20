@@ -22,54 +22,51 @@
 /* This program is commented throughout in a fashion suitable for processing
    with Doxygen. */
 
-
 #ifndef RSP_SERVER__H
 #define RSP_SERVER__H
 
 /*! Size of the matchpoint hash table. Largest prime < 2^10 */
-#define MP_HASH_SIZE  1021
+#define MP_HASH_SIZE 1021
 
 /* Function prototypes for external use */
-void  rsp_init ();
-void  handle_rsp ();
-void  rsp_exception (unsigned long int  except);
-void  rsp_trap();
+void rsp_init();
+void handle_rsp();
+void rsp_exception(unsigned long int except);
+void rsp_trap();
 void rsp_check_stall();
 void rsp_check_watch(unsigned int addr);
 
 /*! Enumeration of different types of matchpoint. These have explicit values
     matching the second digit of 'z' and 'Z' packets. */
 enum mp_type {
-  BP_MEMORY   = 0,
+  BP_MEMORY = 0,
   BP_HARDWARE = 1,
-  WP_WRITE    = 2,
-  WP_READ     = 3,
-  WP_ACCESS   = 4
+  WP_WRITE = 2,
+  WP_READ = 3,
+  WP_ACCESS = 4
 };
 
 /*! Data structure for a matchpoint hash table entry */
-struct mp_entry
-{
-  enum mp_type       type;		/*!< Type of matchpoint */
-  unsigned long int  addr;		/*!< Address with the matchpoint */
-  unsigned long int  instr;		/*!< Substituted instruction */
-  struct mp_entry   *next;		/*!< Next entry with this hash */
+struct mp_entry {
+  enum mp_type type;       /*!< Type of matchpoint */
+  unsigned long int addr;  /*!< Address with the matchpoint */
+  unsigned long int instr; /*!< Substituted instruction */
+  struct mp_entry *next;   /*!< Next entry with this hash */
 };
 
 /*! Central data for the RSP connection */
-struct RSP
-{
-  int                client_waiting;	/*!< Is client waiting a response? */
-  int                proto_num;		/*!< Number of the protocol used */
-  int                client_fd;		/*!< FD for talking to GDB */
-  int                sigval;		/*!< GDB signal for any exception */
-  unsigned long int  start_addr;	/*!< Start of last run */
-  struct mp_entry   *mp_hash[MP_HASH_SIZE];	/*!< Matchpoint hash table */
-  unsigned int       port;
-  int                stalled;
-  int                stepping;
+struct RSP {
+  int client_waiting;                     /*!< Is client waiting a response? */
+  int proto_num;                          /*!< Number of the protocol used */
+  int client_fd;                          /*!< FD for talking to GDB */
+  int sigval;                             /*!< GDB signal for any exception */
+  unsigned long int start_addr;           /*!< Start of last run */
+  struct mp_entry *mp_hash[MP_HASH_SIZE]; /*!< Matchpoint hash table */
+  unsigned int port;
+  int stalled;
+  int stepping;
 };
 
 extern struct RSP rsp;
 
-#endif	/* RSP_SERVER__H */
+#endif /* RSP_SERVER__H */

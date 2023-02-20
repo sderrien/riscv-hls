@@ -2,8 +2,8 @@ PROG=helloworld
 
 OBJS= crt.o $(PROG).o 
 
-CC=riscv32-unknown-elf-gcc -march=rv32i_zicsr -g -O0
-
+CC=riscv32-unknown-elf-gcc
+CFLAGS=-march=rv32i_zicsr -mabi=ilp32 -g -O0
 
 INCLUDES=../include/
 
@@ -21,13 +21,12 @@ $(PROG).elf : $(OBJS)
 	$(CC) -g -static -nostartfiles -o $(PROG).elf -lm -lgcc -Tlink.ld -Wl,-gc-sections $(OBJS)    
 
 $(PROG).o : $(PROG).c
-	$(CC) -c -I$(INCLUDES) -g -o $(PROG).o $(PROG).c 
-	$(CC) -S -I$(INCLUDES) -g -o $(PROG).s $(PROG).c 
+	$(CC) $(CFLAGS) -c -I$(INCLUDES) -g -o $(PROG).o $(PROG).c 
+	$(CC) $(CFLAGS) -S -I$(INCLUDES) -g -o $(PROG).s $(PROG).c 
 
 crt.o : crt.s
-	$(CC) -I$(INCLUDES) -c -o $@ $^  
-
+	$(CC) $(CFLAGS) -I$(INCLUDES) -c -o $@ $^  
 	
 clean:
-	rm *.o *.elf *.hex *.bin *.lst	
+	rm -f *.o *.elf *.hex *.bin *.lst
 	

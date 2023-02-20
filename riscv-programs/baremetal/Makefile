@@ -4,7 +4,8 @@ PROG=baremetal
 OBJS= crt.o boardsupport.o $(PROG).o
 # div.o 
 
-CC=riscv32-unknown-elf-gcc -march=rv32i_zicsr -mabi=ilp32 -g -O3
+CC=riscv32-unknown-elf-gcc
+CFLAGS = -march=rv32i_zicsr -mabi=ilp32 -g -O3
 
 CPP=riscv32-unknown-elf-cpp
 
@@ -21,26 +22,26 @@ $(PROG).bin : $(PROG).elf
 	genrom $(PROG).bin ../../riscv-core/src/rom.h
 	
 $(PROG).elf : $(OBJS)    
-	$(CC) -g -static -nostartfiles -o $(PROG).elf -lgcc -Tlink.ld -Wl,-gc-sections $(OBJS)    
+	$(CC) $(CFLAGS) -static -nostartfiles -o $(PROG).elf -lgcc -Tlink.ld -Wl,-gc-sections $(OBJS)
 
 $(PROG).o : $(PROG).c
-	$(CC) -c -I./include/ -g -o $(PROG).o $(PROG).c 
-	$(CC) -S -I./include/ -g -o $(PROG).s $(PROG).c 
+	$(CC) $(CFLAGS) -c -I./include/ -g -o $(PROG).o $(PROG).c 
+	$(CC) $(CFLAGS) -S -I./include/ -g -o $(PROG).s $(PROG).c 
 
 crt.o : crt.s
 	$(CPP) -E crt.s > _crt.s 
-	$(CC) -I$(INCLUDES) -c -o $@ _$^  
+	$(CC) $(CFLAGS) -I$(INCLUDES) -c -o $@ _$^  
 
 div.o : div.S
-	$(CC) -I$(INCLUDES) -c -o $@ $^  
+	$(CC) $(CFLAGS) -I$(INCLUDES) -c -o $@ $^  
 
 
 boardsupport.o : boardsupport.c
-	$(CC) -c -g -I./include/ -o $@ $^  
+	$(CC) $(CFLAGS) -c -g -I./include/ -o $@ $^  
 
 debug:
 	../../bin 
 	
 clean:
-	rm *.o *.elf *.hex *.bin *.lst	
+	rm -f *.o *.elf *.hex *.bin *.lst
 	
