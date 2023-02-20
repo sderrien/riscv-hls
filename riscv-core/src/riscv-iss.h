@@ -1,7 +1,7 @@
 #include <stdint.h>
 
-#define MEMSIZE 0x100000
-#define IOSIZE 0x100000
+#define MEMSIZE 0x10000000
+#define IOSIZE 0x10000000
 
 int add_hw_bkpt(uint32_t addr);
 

@@ -96,7 +96,7 @@
 /*
  ** MISC-MEM functions
  */
-#define RISCV_MM_FENCE 0x0
+#define RISCV_MM_FENCE 0x0f
 
 /*
  ** SYSTEM functions
@@ -104,6 +104,7 @@
 #define RISCV_SYS_ECALL_EBREAK 0x0
 #define RISCV_SYS_EBREAK 0x1
 #define RISCV_SYS_ECALL 0x0
+#define RISCV_SYS_MRET 0x302
 
 #define RISCV_CSRRW 0x1
 #define RISCV_CSRRS 0x2

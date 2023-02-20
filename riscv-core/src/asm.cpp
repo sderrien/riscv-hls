@@ -24,7 +24,7 @@ struct decode_info decode(unsigned int ir) {
     res.imm_S = ((ir >> 7) & 0x01f) | ((ir >> 20) & 0xfe0);
     res.simm_S = (res.imm_S >= (1 << 11)) ? (res.imm_S - (1 << 12)) : res.imm_S;
     res.imm_U = (ir & 0xfffff000);
-    res.shamt = (ir >> 20) & 0x0f;
+    res.shamt = (ir >> 20) & 0x1f;
     res.imm_J = ((ir >> 20) & 0x7fe) | ((ir >> 9) & 0x800) | (ir & 0xff000) |
                 ((ir >> 11) & 0x100000);
     res.simm_J = (res.imm_J >= (1 << 20)) ? (res.imm_J - (1 << 21)) : res.imm_J;
@@ -38,7 +38,7 @@ struct decode_info decode(unsigned int ir) {
 
 #ifndef __SYNTHESIS__
 
-char buffer[256];
+char buffer[4096];
 
 char const *regnames[32] = {
     "zero", "ra", "sp", "gp", "tp",  "t0",  "t1", "t2", "s0/fp", "s1", "a0",
@@ -159,6 +159,10 @@ char *mnemonic(unsigned int ir) {
         sprintf(buffer, "ebreak");
         break;
       }
+      case RISCV_SYS_MRET: {
+        sprintf(buffer, "mret");
+        break;
+      }
       }
       break;
 
@@ -183,12 +187,13 @@ char *mnemonic(unsigned int ir) {
 
     default:
       break;
-
-      break;
     }
 
     break;
   }
+  case RISCV_MM:
+    sprintf(buffer, "fence");
+    break;
   default: {
     sprintf(buffer, "UNKNOWN INSTRUCTION OPCODE=%02X", dc.opcode);
     break;

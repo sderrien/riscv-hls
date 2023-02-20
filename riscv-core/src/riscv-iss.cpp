@@ -20,16 +20,16 @@ unsigned int uint32(int x) { return (unsigned int)x; }
 
 unsigned int addr32(unsigned int addr) { return (addr % MEMSIZE) >> 2; }
 
-char extract_byte(unsigned int data, unsigned int offset) {
+unsigned char extract_byte(unsigned int data, unsigned int offset) {
   switch (offset) {
   case 0:
-    return ((char)(data));
+    return data & 0xFF;
   case 1:
-    return ((char)(data >> 8) & 0xFF);
+    return (data >> 8) & 0xFF;
   case 2:
-    return ((char)(data >> 16) & 0xFF);
+    return (data >> 16) & 0xFF;
   default:
-    return ((char)(data >> 24));
+    return (data >> 24) & 0xFF;
   }
 }
 
@@ -38,12 +38,12 @@ unsigned int pack_bytes(unsigned char a, unsigned char b, unsigned char c,
   return (a | (b << 8) | (c << 16) | (d << 24));
 }
 
-short extract_half(unsigned int data, unsigned int offset) {
+unsigned short extract_half(unsigned int data, unsigned int offset) {
   switch (offset) {
   case 0:
-    return ((short)(data));
+    return data;
   default:
-    return ((short)(data >> 16));
+    return data >> 16;
   }
 }
 
@@ -179,6 +179,15 @@ bool is_io_access(uint32_t addr) {
   } else {
     return false;
   }
+}
+
+bool is_tohost(uint32_t addr) {
+#ifndef NO_TOHOST
+  return addr == 0x20000; /* WARNING: This needs to be the address of tohost in
+                             the compiled binary! */
+#else
+  return false;
+#endif
 }
 
 uint32_t cpu_memread_u8(uint32_t addr) {
@@ -388,7 +397,7 @@ uint32_t cpu_step() {
     ir = pack_bytes(mem0[addr], mem1[addr], mem2[addr], mem3[addr]);
 
     if (trace_instr)
-      PRINTF("PC=%08X:[%08X] %-21s\n", pc, ir, mnemonic(ir));
+      PRINTF("PC=%08X:@%08X[%08X] %-21s\n", pc, addr, ir, mnemonic(ir));
     dc = decode(ir);
     rd = dc.rd;
     next_pc = pc + 4;
@@ -486,12 +495,12 @@ uint32_t cpu_step() {
         break;
       }
       case RISCV_OP_SLT: {
-        write_reg(x, rd, x[dc.rs1] < x[dc.rs2] ? 1 : 0);
+        write_reg(x, rd, (int32_t)x[dc.rs1] < (int32_t)x[dc.rs2] ? 1 : 0);
         valid = true;
         break;
       }
       case RISCV_OP_SLTU: {
-        write_reg(x, rd, uint32(x[dc.rs1]) < uint32(x[dc.rs2]) ? 1 : 0);
+        write_reg(x, rd, x[dc.rs1] < x[dc.rs2] ? 1 : 0);
         valid = true;
         break;
       }
@@ -507,7 +516,7 @@ uint32_t cpu_step() {
           shcpt = -1;
         }
 #else
-        write_reg(x, rd, (unsigned int)x[dc.rs1] << ((unsigned int)x[dc.rs2]));
+        write_reg(x, rd, x[dc.rs1] << x[dc.rs2]);
 #endif
         valid = true;
         break;
@@ -525,7 +534,7 @@ uint32_t cpu_step() {
             shcpt = -1;
           }
 #else
-          write_reg(x, rd, (x[dc.rs1] >> ((unsigned int)x[dc.rs2])));
+          write_reg(x, rd, (int32_t)x[dc.rs1] >> x[dc.rs2]);
 #endif
           valid = true;
           break;
@@ -542,7 +551,7 @@ uint32_t cpu_step() {
           }
           break;
 #else
-          write_reg(x, rd, uint32(x[dc.rs1] >> ((unsigned int)x[dc.rs2])));
+          write_reg(x, rd, x[dc.rs1] >> x[dc.rs2]);
 #endif
           valid = true;
           break;
@@ -560,11 +569,11 @@ uint32_t cpu_step() {
       switch (dc.funct3) {
       case RISCV_BR_BEQ: {
         valid = true;
-        taken = (x[dc.rs1] == x[dc.rs2]);
+        taken = x[dc.rs1] == x[dc.rs2];
         break;
       }
       case RISCV_BR_BLT: {
-        taken = x[dc.rs1] < x[dc.rs2];
+        taken = (int32_t)x[dc.rs1] < (int32_t)x[dc.rs2];
         valid = true;
         break;
       }
@@ -574,17 +583,17 @@ uint32_t cpu_step() {
         break;
       }
       case RISCV_BR_BGE: {
-        taken = x[dc.rs1] > x[dc.rs2];
+        taken = (int32_t)x[dc.rs1] >= (int32_t)x[dc.rs2];
         valid = true;
         break;
       }
       case RISCV_BR_BGEU: {
-        taken = uint32(x[dc.rs1]) >= uint32(x[dc.rs2]);
+        taken = x[dc.rs1] >= x[dc.rs2];
         valid = true;
         break;
       }
       case RISCV_BR_BLTU: {
-        taken = uint32(x[dc.rs1]) < uint32(x[dc.rs2]);
+        taken = x[dc.rs1] < x[dc.rs2];
         valid = true;
         break;
       }
@@ -601,8 +610,9 @@ uint32_t cpu_step() {
       break;
     }
     case RISCV_JALR: {
+      uint32_t rs1_value = x[dc.rs1]; /* Handle the case where rs1 == rd */
       write_reg(x, rd, next_pc);
-      next_pc = uint32(x[dc.rs1]) + dc.simm_I;
+      next_pc = rs1_value + dc.simm_I;
       valid = true;
       break;
     }
@@ -626,6 +636,10 @@ uint32_t cpu_step() {
             fprintf(stdout, "IO[%08X+%08X=%08X]", (int)(x[dc.rs1]), dc.simm_S,
                     addr);
           cpu_iowrite_u32(addr, x[dc.rs2]);
+        } else if (is_tohost(addr)) {
+          fprintf(stderr, "tohost 0x%08x\n", x[dc.rs2]);
+          next_pc = pc;
+          halted = true;
         } else {
           if (trace_instr)
             fprintf(stdout, "MEM[%08X+%08X=%08X]", (int)(x[dc.rs1]), dc.simm_S,
@@ -649,8 +663,8 @@ uint32_t cpu_step() {
             break;
           }
           case 2:
-            mem2[waddr] = extract_byte(x[dc.rs2], 2);
-            mem3[waddr] = extract_byte(x[dc.rs2], 3);
+            mem2[waddr] = extract_byte(x[dc.rs2], 0);
+            mem3[waddr] = extract_byte(x[dc.rs2], 1);
             break;
           }
         }
@@ -710,18 +724,19 @@ uint32_t cpu_step() {
       }
       case RISCV_LD_LB: {
         valid = true;
-        write_reg(x, rd, (int)extract_byte(data, offset));
+        write_reg(x, rd, (int8_t)extract_byte(data, offset));
         break;
       }
       case RISCV_LD_LBU: {
         valid = true;
-        data = (unsigned char)extract_byte(data, offset);
+        data = extract_byte(data, offset);
         write_reg(x, rd, data);
         break;
       }
       case RISCV_LD_LH: {
         valid = (offset % 2) == 0;
-        write_reg(x, rd, (int)extract_half(data, offset));
+        uint32_t value = (int16_t)extract_half(data, offset);
+        write_reg(x, rd, value);
         break;
       }
       case RISCV_LD_LHU: {
@@ -745,6 +760,8 @@ uint32_t cpu_step() {
           csr[RISCV_CSR_MEPC] = pc;
           next_pc = csr[RISCV_CSR_MTVEC];
           csr[RISCV_CSR_MCAUSE] = EXCEPTION_ECALL_M;
+          if (x[17] == 93 /* SYS_EXIT */)
+            PRINTF("exit(%u)\n", x[10]);
           break;
         }
         case RISCV_SYS_EBREAK: {
@@ -786,8 +803,10 @@ uint32_t cpu_step() {
       valid = true;
       break;
     }
-
 #endif
+    case RISCV_MM_FENCE:
+      valid = true;
+      break;
     }
 
     if (trace_instr) {
