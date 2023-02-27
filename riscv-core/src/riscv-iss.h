@@ -10,6 +10,7 @@ int cpu_reset();
 int cpu_halt();
 int cpu_start();
 uint32_t cpu_run();
+uint32_t nano_cpu_run();
 bool is_cpu_halted();
 
 uint32_t cpu_memread_u8(uint32_t addr);

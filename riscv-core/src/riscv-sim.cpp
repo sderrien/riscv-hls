@@ -62,18 +62,53 @@ int loadbinary(char *filename) {
   }
 }
 
+void quit(int s) {
+  printf("Caught exit signal %d\n", s);
+  exit(1);
+}
+
 extern bool trace_instr;
+
 int main(int argc, char **argv) {
 
   trace_instr = false;
+
+  FILE *tmp = stdout;
+  int nbopt = 0;
   for (int k = 1; k < argc; k++) {
     if (strcmp(argv[k], "-trace") == 0) {
       trace_instr = true;
+      nbopt++;
+    }
+    if (strcmp(argv[k], "-o") == 0) {
+      FILE *ofile = fopen(argv[k + 1], "w");
+      printf("Using output file %s\n", argv[k + 1]);
+      if (ofile == NULL) {
+        return -2;
+      }
+      stdout = ofile;
+      nbopt += 2;
     }
   }
-  loadbinary(argv[1]);
-  printf("reset CPU\n");
+  struct sigaction sigIntHandler;
+  sigIntHandler.sa_handler = quit;
+  sigemptyset(&sigIntHandler.sa_mask);
+  sigIntHandler.sa_flags = 0;
+
+  sigaction(SIGINT, &sigIntHandler, NULL);
+
+  printf("Loading binary file %s\n", argv[nbopt + 1]);
+  loadbinary(argv[nbopt + 1]);
+  printf("Reset CPU\n");
   cpu_reset();
+  cpu_run();
+
+  printf("PC=%08X\n", cpu_getpc());
+  for (int regid = 0; regid < 32; regid++) {
+    printf("%s[%d]=%08X\n", rname(regid), regid, cpu_getreg(regid));
+  }
+  printf("End of program\n");
+  fclose(stdout);
 
   printf("Run CPU\n");
   cpu_run();

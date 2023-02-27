@@ -6,17 +6,25 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/signal.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
+#include "../baremetal/syscalls.h"
 #include "../baremetal/util.h"
 
 #define IO_BASE 0x80000000
-
-#define SYS_write 64
 
 #undef strcmp
 
 extern volatile uint64_t tohost;
 extern volatile uint64_t fromhost;
+
+static int my_putc(int fd, char *buffer, unsigned int count) {
+
+  for (int k = 0; k < count; k++) {
+    ((int *)((void *)((unsigned int)IO_BASE)))[1] = buffer[k];
+  }
+}
 
 static uintptr_t syscall(uintptr_t which, uint64_t arg0, uint64_t arg1,
                          uint64_t arg2) {
@@ -30,12 +38,23 @@ static uintptr_t syscall(uintptr_t which, uint64_t arg0, uint64_t arg1,
 #endif
 
   switch (which) {
+  case SYS_fstat: {
+    return 0;
+  }
+  case SYS_brk: {
+    return 0;
+  }
   case SYS_write: {
-    ((int *)((void *)((unsigned int)IO_BASE)))[1] = arg0;
+    // stdout is expected to be 1
+    // if (arg0==1) {
+    unsigned int count = arg2;
+    char *buffer = (char *)((void *)arg1);
+    my_putc(arg0, buffer, count);
+    //}
     break;
   }
-  default: {
-  }
+  default:
+    break;
   }
 
 #ifdef MULTITHREADING
@@ -73,10 +92,30 @@ void __attribute__((noreturn)) tohost_exit(uintptr_t code) {
     ;
 }
 
+#define EXCEPTION_ECALL_U 8
+#define EXCEPTION_ECALL_S 9
+#define EXCEPTION_ECALL_M 11
+#define EXCEPTION_ILLEGAL_INST 2
+#define EXCEPTION_BKPT 3
+
+#define MCAUSE32_CAUSE 0x7FFFFFFF
+#define MCAUSE32_INT 0x80000000
+
 uintptr_t __attribute__((weak))
 handle_trap(uintptr_t cause, uintptr_t epc, uintptr_t regs[32]) {
-  tohost_exit(1337);
-  return 0;
+  switch (cause) {
+  case EXCEPTION_ECALL_M: {
+    syscall(regs[7], regs[0], regs[1], regs[2]);
+    break;
+  }
+  case EXCEPTION_BKPT: {
+    break;
+  }
+  case EXCEPTION_ILLEGAL_INST: {
+    break;
+  }
+  }
+  return epc;
 }
 
 void exit(int code) { tohost_exit(code); }
@@ -381,16 +420,16 @@ int printf(const char *fmt, ...) {
   return 0; // incorrect return value, but who cares, anyway?
 }
 
+void sprintf_putch(int ch, void **data) {
+  char **pstr = (char **)data;
+  **pstr = ch;
+  (*pstr)++;
+}
+
 int sprintf(char *str, const char *fmt, ...) {
   va_list ap;
   char *str0 = str;
   va_start(ap, fmt);
-
-  void sprintf_putch(int ch, void **data) {
-    char **pstr = (char **)data;
-    **pstr = ch;
-    (*pstr)++;
-  }
 
   vprintfmt(sprintf_putch, (void **)&str, fmt, ap);
   *str = 0;

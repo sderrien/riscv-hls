@@ -18,6 +18,7 @@ struct decode_info {
   short br_offset;
 };
 
+
 extern struct decode_info decode(unsigned int ir);
 extern char *mnemonic(unsigned int ir);
 char *rname(unsigned int ir);

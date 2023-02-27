@@ -44,4 +44,14 @@ debug:
 	
 clean:
 	rm -f *.o *.elf *.hex *.bin *.lst
-	
+
+debug_iss: ./$(PROG).elf
+	make -C ../../ gdb
+	open -a Terminal ../../bin/gdb-server-iss 
+	riscv32-unknown-elf-gdb ./$(PROG).elf --ex='target remote:1234' --ex='load ./$(PROG).elf' --ex='break main'  
+
+
+run_iss: ./$(PROG).bin
+	make -C ../../ gdb
+	../../bin/riscv-sim 	./$(PROG).bin
+

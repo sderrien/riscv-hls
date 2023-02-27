@@ -1,0 +1,88 @@
+
+isatest.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+00000000 <_start>:
+	.text
+  .globl _start
+_start:
+	li x1, 0x1
+   0:	00100093          	addi	ra,zero,1
+	bne x1,x0, test_opi
+   4:	00009a63          	bne	ra,zero,18 <test_opi>
+
+00000008 <error_branch>:
+
+error_branch:
+  	bne x1,x0, error_branch
+   8:	00009063          	bne	ra,zero,8 <error_branch>
+
+0000000c <error_opi>:
+
+error_opi:
+  	bne x1,x0,error_opi
+   c:	00009063          	bne	ra,zero,c <error_opi>
+
+00000010 <error_op>:
+
+error_op:
+  	bne x1,x0,error_op
+  10:	00009063          	bne	ra,zero,10 <error_op>
+
+00000014 <error_lw>:
+
+error_lw:
+  	bne x1,x0, error_lw
+  14:	00009063          	bne	ra,zero,14 <error_lw>
+
+00000018 <test_opi>:
+
+
+
+test_opi:
+	li x1, 0x1
+  18:	00100093          	addi	ra,zero,1
+	addi x2, x1, 0x1F
+  1c:	01f08113          	addi	sp,ra,31
+	addi x3, x2, -1
+  20:	fff10193          	addi	gp,sp,-1
+	xori x4, x3, 0x1F
+  24:	01f1c213          	xori	tp,gp,31
+	bne x4,x0, error_opi
+  28:	fe0212e3          	bne	tp,zero,c <error_opi>
+
+0000002c <test_op>:
+
+test_op:
+	add x5, x1, x1  # 0x2
+  2c:	001082b3          	add	t0,ra,ra
+	sub x6, x5, x1  # 1
+  30:	40128333          	sub	t1,t0,ra
+	xor x7, x5, x6  # 3
+  34:	0062c3b3          	xor	t2,t0,t1
+	li x8, 0x3
+  38:	00300413          	addi	s0,zero,3
+	bne x8,x7, error_op
+  3c:	fc741ae3          	bne	s0,t2,10 <error_op>
+
+00000040 <test_lw>:
+
+test_lw:
+	la x9, data
+  40:	06000493          	addi	s1,zero,96
+	lw x10, (x9)
+  44:	0004a503          	lw	a0,0(s1)
+	andi x11, x10, 0x1FF
+  48:	1ff57593          	andi	a1,a0,511
+	li x12, 0x1EF
+  4c:	1ef00613          	addi	a2,zero,495
+	bne x12,x11, error_lw
+  50:	fcb612e3          	bne	a2,a1,14 <error_lw>
+
+00000054 <success>:
+
+success:
+  	bne x1,x0,success
+  54:	00009063          	bne	ra,zero,54 <success>

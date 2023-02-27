@@ -11,10 +11,12 @@ OBJCPY=riscv32-unknown-elf-objcopy
 
 OBJDUMP=riscv32-unknown-elf-objdump
  
+all: $(PROG).bin
+ 
 $(PROG).bin : $(PROG).elf 
 	$(OBJCPY) -O binary $(PROG).elf $(PROG).bin  
 	$(OBJCPY) -O ihex $(PROG).elf $(PROG).hex  
-	$(OBJDUMP) -drwC -S $(PROG).elf > $(PROG).lst
+	$(OBJDUMP) -drwC -Mno-aliases -S $(PROG).elf > $(PROG).lst
 	genrom $(PROG).bin ../../riscv-core/src/rom.h
 	
 $(PROG).elf : $(OBJS)    
@@ -26,4 +28,4 @@ $(PROG).o : $(PROG).s
 	
 clean:
 	rm -f *.o *.elf *.hex *.bin *.lst
-	
+

@@ -96,7 +96,7 @@ char *mnemonic(unsigned int ir) {
   }
   case RISCV_OPI: {
 
-    if ((dc.funct3 == RISCV_OPI_SRI)) {
+    if (dc.funct3 == RISCV_OPI_SRI) {
       if (dc.simm_I & 0xF00) {
         sprintf(buffer, "srai %s,%s,%08X", rd, rs1, dc.simm_I);
       } else {
@@ -149,7 +149,7 @@ char *mnemonic(unsigned int ir) {
   case RISCV_SYS: {
 
     switch (dc.funct3) {
-    case RISCV_SYS_ECALL_EBREAK:
+    case RISCV_SYS_PRIVILEGED:
       switch (dc.imm_I) {
       case RISCV_SYS_ECALL: {
         sprintf(buffer, "ecall");
@@ -159,8 +159,21 @@ char *mnemonic(unsigned int ir) {
         sprintf(buffer, "ebreak");
         break;
       }
+      case RISCV_SYS_SRET: {
+        sprintf(buffer, "sret");
+        break;
+      }
+      case RISCV_SYS_URET: {
+        sprintf(buffer, "uret");
+        break;
+      }
       case RISCV_SYS_MRET: {
         sprintf(buffer, "mret");
+        break;
+      }
+      case RISCV_SYS_WFI: {
+        // WFI : wait for interrupt
+        sprintf(buffer, "wfi");
         break;
       }
       }

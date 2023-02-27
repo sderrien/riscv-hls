@@ -101,10 +101,14 @@
 /*
  ** SYSTEM functions
  */
-#define RISCV_SYS_ECALL_EBREAK 0x0
+#define RISCV_SYS_PRIVILEGED 0x0
 #define RISCV_SYS_EBREAK 0x1
 #define RISCV_SYS_ECALL 0x0
 #define RISCV_SYS_MRET 0x302
+#define RISCV_SYS_SRET 0x102
+#define RISCV_SYS_URET 0x002
+#define RISCV_SYS_WFI 0x105
+#define RISCV_SYS_SFENCE_VMA 0x002
 
 #define RISCV_CSRRW 0x1
 #define RISCV_CSRRS 0x2
@@ -178,7 +182,7 @@
 #define EXTENSION_I 0x00000100 //	RV32I/64I/128I base ISA
 #define EXTENSION_J                                                            \
   0x00000200 //	Tentatively reserved for Dynamically Translated Languages
-             //extension
+             // extension
 #define EXTENSION_K 0x00000400 //	Reserved
 #define EXTENSION_L                                                            \
   0x00000800 //	Tentatively reserved for Decimal Floating-Point extension
