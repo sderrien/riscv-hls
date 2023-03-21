@@ -307,6 +307,8 @@ int cpu_info(uint8_t id) {
   return 0xDEADBEEF;
 }
 
+bool is_cpu_halted() { return halted; }
+
 uint32_t cpu_run() {
   do {
     cpu_step();
