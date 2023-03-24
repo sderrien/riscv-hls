@@ -628,8 +628,9 @@ uint32_t nano_cpu_run(int nbinsn) {
     }
     case RISCV_JALR: {
       valid = true;
+      uint32_t rs1_value = x[dc.rs1]; /* Handle the case where rs1 == rd */
       write_reg(x, dc.rd, next_pc);
-      next_pc = ((uint32_t)x[dc.rs1]) + dc.simm_I;
+      next_pc = rs1_value + dc.simm_I;
       break;
     }
     case RISCV_ST: {
