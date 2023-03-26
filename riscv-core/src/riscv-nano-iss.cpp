@@ -192,7 +192,7 @@
 #define EXTENSION_I 0x00000100 //	RV32I/64I/128I base ISA
 #define EXTENSION_J                                                            \
   0x00000200 //	Tentatively reserved for Dynamically Translated Languages
-             // extension
+// extension
 #define EXTENSION_K 0x00000400 //	Reserved
 #define EXTENSION_L                                                            \
   0x00000800 //	Tentatively reserved for Decimal Floating-Point extension
@@ -220,156 +220,47 @@
 #if MEMSIZE<0x00000070 
 #error binary image does not fit memory 
 #endif
-unsigned int memw[MEMSIZE/4]= {
-	0x00100093, // 00000000: addi ra,zero,00000001,
-	0x00009A63, // 00000004: bne ra,zero,00000014,
-	0x00009063, // 00000008: bne ra,zero,00000000,
-	0x00009063, // 0000000C: bne ra,zero,00000000,
-	0x00009063, // 00000010: bne ra,zero,00000000,
-	0x00009063, // 00000014: bne ra,zero,00000000,
-	0x00100093, // 00000018: addi ra,zero,00000001,
-	0x01F08113, // 0000001C: addi sp,ra,0000001F,
-	0xFFF10193, // 00000020: addi gp,sp,FFFFFFFF,
-	0x01F1C213, // 00000024: xori tp,gp,0000001F,
-	0xFE0212E3, // 00000028: bne tp,zero,FFFFFFE4,
-	0x001082B3, // 0000002C: add t0,ra,ra,
-	0x40128333, // 00000030: add t1,t0,ra,
-	0x0062C3B3, // 00000034: xor t2,t0,t1,
-	0x00300413, // 00000038: addi s0/fp,zero,00000003,
-	0xFC741AE3, // 0000003C: bne s0/fp,t2,FFFFFFD4,
-	0x06000493, // 00000040: addi s1,zero,00000060,
-	0x0004A503, // 00000044: lw a0,s1(0:0),
-	0x1FF57593, // 00000048: andi a1,a0,000001FF,
-	0x1EF00613, // 0000004C: addi a2,zero,000001EF,
-	0xFCB612E3, // 00000050: bne a2,a1,FFFFFFC4,
-	0x00009063, // 00000054: bne ra,zero,00000000,
-	0x00000000, // 00000058: UNKNOWN INSTRUCTION OPCODE=00,
-	0x00000000, // 0000005C: UNKNOWN INSTRUCTION OPCODE=00,
-	0xDEADBEEF, // 00000060: jal t4, -534,
-	0xBABEFACE, // 00000064: UNKNOWN INSTRUCTION OPCODE=4E,
-	0x1BADCAFE, // 00000068: UNKNOWN INSTRUCTION OPCODE=7E,
-	0x1BADCAFE, // 0000006C: UNKNOWN INSTRUCTION OPCODE=7E
-};
-unsigned char mem0[MEMSIZE/4]= {
-	0x93 ,
-	0x63 ,
-	0x63 ,
-	0x63 ,
-	0x63 ,
-	0x63 ,
-	0x93 ,
-	0x13 ,
-	0x93 ,
-	0x13 ,
-	0xE3 ,
-	0xB3 ,
-	0x33 ,
-	0xB3 ,
-	0x13 ,
-	0xE3 ,
-	0x93 ,
-	0x03 ,
-	0x93 ,
-	0x13 ,
-	0xE3 ,
-	0x63 ,
-	0x00 ,
-	0x00 ,
-	0xEF ,
-	0xCE ,
-	0xFE ,
-	0xFE 
-};
-unsigned char mem1[MEMSIZE/4]= {
-	0x00 ,
-	0x9A ,
-	0x90 ,
-	0x90 ,
-	0x90 ,
-	0x90 ,
-	0x00 ,
-	0x81 ,
-	0x01 ,
-	0xC2 ,
-	0x12 ,
-	0x82 ,
-	0x83 ,
-	0xC3 ,
-	0x04 ,
-	0x1A ,
-	0x04 ,
-	0xA5 ,
-	0x75 ,
-	0x06 ,
-	0x12 ,
-	0x90 ,
-	0x00 ,
-	0x00 ,
-	0xBE ,
-	0xFA ,
-	0xCA ,
-	0xCA 
-};
-unsigned char mem2[MEMSIZE/4]= {
-	0x10 ,
-	0x00 ,
-	0x00 ,
-	0x00 ,
-	0x00 ,
-	0x00 ,
-	0x10 ,
-	0xF0 ,
-	0xF1 ,
-	0xF1 ,
-	0x02 ,
-	0x10 ,
-	0x12 ,
-	0x62 ,
-	0x30 ,
-	0x74 ,
-	0x00 ,
-	0x04 ,
-	0xF5 ,
-	0xF0 ,
-	0xB6 ,
-	0x00 ,
-	0x00 ,
-	0x00 ,
-	0xAD ,
-	0xBE ,
-	0xAD ,
-	0xAD 
-};
-unsigned char mem3[MEMSIZE/4]= {
-	0x00 ,
-	0x00 ,
-	0x00 ,
-	0x00 ,
-	0x00 ,
-	0x00 ,
-	0x00 ,
-	0x01 ,
-	0xFF ,
-	0x01 ,
-	0xFE ,
-	0x00 ,
-	0x40 ,
-	0x00 ,
-	0x00 ,
-	0xFC ,
-	0x06 ,
-	0x00 ,
-	0x1F ,
-	0x1E ,
-	0xFC ,
-	0x00 ,
-	0x00 ,
-	0x00 ,
-	0xDE ,
-	0xBA ,
-	0x1B ,
-	0x1B 
-};
+unsigned int memw[MEMSIZE / 4] = { 0x00100093, // 00000000: addi ra,zero,00000001,
+		0x00009A63, // 00000004: bne ra,zero,00000014,
+		0x00009063, // 00000008: bne ra,zero,00000000,
+		0x00009063, // 0000000C: bne ra,zero,00000000,
+		0x00009063, // 00000010: bne ra,zero,00000000,
+		0x00009063, // 00000014: bne ra,zero,00000000,
+		0x00100093, // 00000018: addi ra,zero,00000001,
+		0x01F08113, // 0000001C: addi sp,ra,0000001F,
+		0xFFF10193, // 00000020: addi gp,sp,FFFFFFFF,
+		0x01F1C213, // 00000024: xori tp,gp,0000001F,
+		0xFE0212E3, // 00000028: bne tp,zero,FFFFFFE4,
+		0x001082B3, // 0000002C: add t0,ra,ra,
+		0x40128333, // 00000030: add t1,t0,ra,
+		0x0062C3B3, // 00000034: xor t2,t0,t1,
+		0x00300413, // 00000038: addi s0/fp,zero,00000003,
+		0xFC741AE3, // 0000003C: bne s0/fp,t2,FFFFFFD4,
+		0x06000493, // 00000040: addi s1,zero,00000060,
+		0x0004A503, // 00000044: lw a0,s1(0:0),
+		0x1FF57593, // 00000048: andi a1,a0,000001FF,
+		0x1EF00613, // 0000004C: addi a2,zero,000001EF,
+		0xFCB612E3, // 00000050: bne a2,a1,FFFFFFC4,
+		0x00009063, // 00000054: bne ra,zero,00000000,
+		0x00000000, // 00000058: UNKNOWN INSTRUCTION OPCODE=00,
+		0x00000000, // 0000005C: UNKNOWN INSTRUCTION OPCODE=00,
+		0xDEADBEEF, // 00000060: jal t4, -534,
+		0xBABEFACE, // 00000064: UNKNOWN INSTRUCTION OPCODE=4E,
+		0x1BADCAFE, // 00000068: UNKNOWN INSTRUCTION OPCODE=7E,
+		0x1BADCAFE, // 0000006C: UNKNOWN INSTRUCTION OPCODE=7E
+		};
+unsigned char mem0[MEMSIZE / 4] = { 0x93, 0x63, 0x63, 0x63, 0x63, 0x63, 0x93,
+		0x13, 0x93, 0x13, 0xE3, 0xB3, 0x33, 0xB3, 0x13, 0xE3, 0x93, 0x03, 0x93,
+		0x13, 0xE3, 0x63, 0x00, 0x00, 0xEF, 0xCE, 0xFE, 0xFE };
+unsigned char mem1[MEMSIZE / 4] = { 0x00, 0x9A, 0x90, 0x90, 0x90, 0x90, 0x00,
+		0x81, 0x01, 0xC2, 0x12, 0x82, 0x83, 0xC3, 0x04, 0x1A, 0x04, 0xA5, 0x75,
+		0x06, 0x12, 0x90, 0x00, 0x00, 0xBE, 0xFA, 0xCA, 0xCA };
+unsigned char mem2[MEMSIZE / 4] = { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10,
+		0xF0, 0xF1, 0xF1, 0x02, 0x10, 0x12, 0x62, 0x30, 0x74, 0x00, 0x04, 0xF5,
+		0xF0, 0xB6, 0x00, 0x00, 0x00, 0xAD, 0xBE, 0xAD, 0xAD };
+unsigned char mem3[MEMSIZE / 4] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x01, 0xFF, 0x01, 0xFE, 0x00, 0x40, 0x00, 0x00, 0xFC, 0x06, 0x00, 0x1F,
+		0x1E, 0xFC, 0x00, 0x00, 0x00, 0xDE, 0xBA, 0x1B, 0x1B };
 
 int add_hw_bkpt(uint32_t addr);
 
@@ -396,32 +287,34 @@ int cpu_setreg(uint16_t id, uint32_t value);
 int cpu_info(uint8_t id);
 
 struct decode_info {
-  unsigned char opcode;
-  unsigned char rd;
-  unsigned char funct3;
-  unsigned char rs1;
-  unsigned char rs2;
-  unsigned char funct7;
-  unsigned short imm_I;
-  unsigned short funct12;
-  short simm_I;
-  unsigned short imm_S;
-  short simm_S;
-  unsigned int imm_U;
-  unsigned char shamt;
-  unsigned int imm_J;
-  int simm_J;
-  unsigned short br_uoffset;
-  short br_offset;
+	unsigned char opcode;
+	unsigned char rd;
+	unsigned char funct3;
+	unsigned char rs1;
+	unsigned char rs2;
+	unsigned char funct7;
+	unsigned short imm_I;
+	unsigned short funct12;
+	short simm_I;
+	unsigned short imm_S;
+	short simm_S;
+	unsigned int imm_U;
+	unsigned char shamt;
+	unsigned int imm_J;
+	int simm_J;
+	unsigned short br_uoffset;
+	short br_offset;
 };
 
 struct decode_info decode(unsigned int ir);
-char *mnemonic(unsigned int ir);
-char *rname(unsigned int ir);
+char* mnemonic(unsigned int ir);
+char* rname(unsigned int ir);
 
-uint32_t addr32(uint32_t addr) { return (addr % MEMSIZE) >> 2; }
+uint32_t addr32(uint32_t addr) {
+	return (addr % MEMSIZE) >> 2;
+}
 
-uint32_t x[32] = {0, 0, 0, 0, 0};
+uint32_t x[32] = { 0, 0, 0, 0, 0 };
 bool halted = false;
 uint32_t pc, next_pc;
 uint32_t insncnt;
@@ -449,462 +342,491 @@ void trace_io(uint32_t addr, uint32_t value) {}
 #endif
 
 void write_reg(uint32_t x[32], uint32_t rd, int value) {
-  if (rd != 0 && rd < 32) {
-    x[rd] = value;
-    // printf("%s[%d]=%08X\n",rname(rd),rd,value);
-  }
+	if (rd != 0 && rd < 32) {
+		x[rd] = value;
+		// printf("%s[%d]=%08X\n",rname(rd),rd,value);
+	}
 }
 
 void cpu_branch_insn(struct decode_info dc, bool taken) {
-  if (taken) {
-    // printf("pc = %08X + %08X\n",pc,dc.br_offset);
-    next_pc = pc + dc.br_offset;
-  }
+	if (taken) {
+		// printf("pc = %08X + %08X\n",pc,dc.br_offset);
+		next_pc = pc + dc.br_offset;
+	}
 }
 
-uint32_t byte_offset(uint32_t addr) { return (addr & 0x3); }
+uint32_t byte_offset(uint32_t addr) {
+	return (addr & 0x3);
+}
 
 uint32_t nano_cpu_run(int nbinsn) {
-  uint32_t ir;
-  struct decode_info dc;
-  int simm_I;
-  uint32_t addr;
-  unsigned char byte0 = 0;
-  unsigned char byte1 = 0;
-  unsigned char byte2 = 0;
-  unsigned char byte3 = 0;
-  uint32_t data;
-  uint32_t hartid = 1;
-  uint32_t waddr;
-  uint32_t offset;
-  uint32_t cpt = 0;
+	uint32_t ir;
+	struct decode_info dc;
+	int simm_I;
+	uint32_t addr;
+	unsigned char byte0 = 0;
+	unsigned char byte1 = 0;
+	unsigned char byte2 = 0;
+	unsigned char byte3 = 0;
+	uint32_t data;
+	uint32_t hartid = 1;
+	uint32_t waddr;
+	uint32_t offset;
+	uint32_t cpt = 0;
 
-  bool taken;
+	bool taken;
 
-  bool valid;
-  do {
-    valid = false;
-    addr = addr32(pc);
-    ir = memw[addr];
-    dc = decode(ir);
+	bool valid;
+	do {
+		valid = false;
+		addr = addr32(pc);
+		ir = memw[addr];
+		dc = decode(ir);
 
-    //printf("PC=%08X:[%08X] %-21s \n", pc, ir, mnemonic(ir));
+		//printf("PC=%08X:[%08X] %-21s \n", pc, ir, mnemonic(ir));
 
-    next_pc = pc + 4;
-    cpt++;
-    switch (dc.opcode) {
+		next_pc = pc + 4;
+		insncnt++;
+		switch (dc.opcode) {
 
-    case RISCV_LUI:
-      write_reg(x, dc.rd, dc.imm_U);
-      valid = true;
-      break;
-    case RISCV_AUIPC:
-      write_reg(x, dc.rd, pc + dc.imm_U);
-      valid = true;
-      break;
-    case RISCV_OPI: {
+//    case RISCV_LUI:
+//      write_reg(x, dc.rd, dc.imm_U);
+//      valid = true;
+//      break;
+//    case RISCV_AUIPC:
+//      write_reg(x, dc.rd, pc + dc.imm_U);
+//      valid = true;
+//      break;
+		case RISCV_OPI: {
 
-      switch (dc.funct3) {
-      case RISCV_OPI_ADDI:
-        write_reg(x, dc.rd, x[dc.rs1] + dc.simm_I);
-        valid = true;
-        break;
-      case RISCV_OPI_ANDI:
-        write_reg(x, dc.rd, x[dc.rs1] & dc.simm_I);
-        valid = true;
-        break;
-      case RISCV_OPI_ORI:
-        write_reg(x, dc.rd, x[dc.rs1] | dc.simm_I);
-        valid = true;
-        break;
-      case RISCV_OPI_XORI:
-        write_reg(x, dc.rd, x[dc.rs1] ^ dc.simm_I);
-        valid = true;
-        break;
-      case RISCV_OPI_SLTI:
-        write_reg(x, dc.rd, ((int)x[dc.rs1] < dc.simm_I) ? 1 : 0);
-        valid = true;
-        break;
-      case RISCV_OPI_SLTIU:
-        write_reg(x, dc.rd, (x[dc.rs1] < dc.simm_I) ? 1 : 0);
-        valid = true;
-        break;
-      case RISCV_OPI_SLLI:
-        write_reg(x, dc.rd, (x[dc.rs1] << (dc.simm_I)));
-        valid = true;
-        break;
-      case RISCV_OPI_SRI:
-        valid = true;
-        if ((dc.imm_I & 0xF00) != 0)
-          write_reg(x, dc.rd, (((int)x[dc.rs1]) >> dc.simm_I)); // SRAI
-        else
-          write_reg(x, dc.rd, (x[dc.rs1] >> dc.simm_I)); // SRLI
-        break;
-      }
-      break;
-    }
-    case RISCV_OP: {
-      switch (dc.funct3) {
-      case RISCV_OP_ADD: {
-        switch (dc.funct7) {
-        case RISCV_OP_ADD_ADD:
-          write_reg(x, dc.rd, x[dc.rs1] + x[dc.rs2]);
-          valid = true;
-          break;
-        case RISCV_OP_ADD_SUB:
-          write_reg(x, dc.rd, x[dc.rs1] - x[dc.rs2]);
-          valid = true;
-          break;
-        }
-        break;
-      }
-      case RISCV_OP_AND:
-        write_reg(x, dc.rd, x[dc.rs1] & x[dc.rs2]);
-        valid = true;
-        break;
-      case RISCV_OP_OR:
-        write_reg(x, dc.rd, x[dc.rs1] | x[dc.rs2]);
-        valid = true;
-        break;
-      case RISCV_OP_XOR:
-        write_reg(x, dc.rd, x[dc.rs1] ^ x[dc.rs2]);
-        valid = true;
-        break;
-      case RISCV_OP_SLT:
-        write_reg(x, dc.rd, x[dc.rs1] < x[dc.rs2] ? 1 : 0);
-        valid = true;
-        break;
-      case RISCV_OP_SLTU:
-        write_reg(x, dc.rd,
-                  ((uint32_t)x[dc.rs1]) < ((uint32_t)x[dc.rs2]) ? 1 : 0);
-        valid = true;
-        break;
-      case RISCV_OP_SLL:
-        write_reg(x, dc.rd, ((uint32_t)x[dc.rs1]) << ((uint32_t)x[dc.rs2]));
-        valid = true;
-        break;
-      case RISCV_OP_SR: {
-        switch (dc.funct7) {
-        case RISCV_OP_SR_SRA:
-          write_reg(x, dc.rd, (x[dc.rs1] >> ((uint32_t)x[dc.rs2])));
-          valid = true;
-          break;
-        case RISCV_OP_SR_SRL:
-          write_reg(x, dc.rd, ((uint32_t)x[dc.rs1]) >> ((uint32_t)x[dc.rs2]));
-          valid = true;
-          break;
-        }
-        break;
-      }
-      }
-      break;
-    }
-    case RISCV_BR: {
-      switch (dc.funct3) {
-      case RISCV_BR_BLT:
-        cpu_branch_insn(dc, x[dc.rs1] < x[dc.rs2]);
-        valid = true;
-        break;
-      case RISCV_BR_BGE:
-        cpu_branch_insn(dc, x[dc.rs1] >= x[dc.rs2]);
-        valid = true;
-        break;
-      case RISCV_BR_BEQ:
-        cpu_branch_insn(dc, x[dc.rs1] == x[dc.rs2]);
-        valid = true;
-        break;
-      case RISCV_BR_BNE:
-        cpu_branch_insn(dc, x[dc.rs1] != x[dc.rs2]);
-        valid = true;
-        break;
-      }
-      break;
-    }
-    case RISCV_JAL: {
-      valid = true;
-      write_reg(x, dc.rd, next_pc);
-      next_pc = pc + dc.simm_J;
-      break;
-    }
-    case RISCV_JALR: {
-      valid = true;
-      write_reg(x, dc.rd, next_pc);
-      next_pc = ((uint32_t)x[dc.rs1]) + dc.simm_I;
-      break;
-    }
-    case RISCV_ST: {
-      switch (dc.funct3) {
-      case RISCV_ST_SW:
-        addr = ((int)x[dc.rs1]) + (dc.simm_S);
-        offset = byte_offset(addr);
-        valid = (offset % 4) == 0;
-        memw[addr32(addr)] = x[dc.rs2];
-        break;
-      }
-      break;
-    }
-    case RISCV_LD:
-      switch (dc.funct3) {
-      case RISCV_LD_LW:
-        addr = ((int)x[dc.rs1]) + (int)(dc.simm_I);
-        offset = byte_offset(addr);
-        valid = (offset % 4) == 0;
-        write_reg(x, dc.rd, memw[addr32(addr)]);
-        break;
-      }
-      break;
-    default:
-      halted = true;
-    }
+			switch (dc.funct3) {
+			case RISCV_OPI_ADDI:
+				write_reg(x, dc.rd, x[dc.rs1] + dc.simm_I);
+				valid = true;
+				break;
+			case RISCV_OPI_ANDI:
+				write_reg(x, dc.rd, x[dc.rs1] & dc.simm_I);
+				valid = true;
+				break;
+//      case RISCV_OPI_ORI:
+//        write_reg(x, dc.rd, x[dc.rs1] | dc.simm_I);
+//        valid = true;
+//        break;
+			case RISCV_OPI_XORI:
+				write_reg(x, dc.rd, x[dc.rs1] ^ dc.simm_I);
+				valid = true;
+				break;
+//      case RISCV_OPI_SLTI:
+//        write_reg(x, dc.rd, ((int)x[dc.rs1] < dc.simm_I) ? 1 : 0);
+//        valid = true;
+//        break;
+//      case RISCV_OPI_SLTIU:
+//        write_reg(x, dc.rd, (x[dc.rs1] < dc.simm_I) ? 1 : 0);
+//        valid = true;
+//        break;
+//      case RISCV_OPI_SRI:
+//        if (dc.funct7 == RISCV_OPI_SRI_SRAI) {
+//          write_reg(x, dc.rd, (((int)x[dc.rs1]) >> dc.shamt));
+//         valid = true;
+//        } else if (dc.funct7 == RISCV_OPI_SRI_SRLI) {
+//          write_reg(x, dc.rd, (x[dc.rs1] >> dc.shamt));
+//           valid = true;
+//        }
+//        break;
+//       case RISCV_OPI_SLLI:
+//        write_reg(x, dc.rd, (x[dc.rs1] << (dc.shamt)));
+//        valid = true;
+//        break;
+			}
+			break;
+		}
+		case RISCV_OP: {
+			switch (dc.funct3) {
+			case RISCV_OP_ADD: {
+				switch (dc.funct7) {
+				case RISCV_OP_ADD_ADD:
+					write_reg(x, dc.rd, x[dc.rs1] + x[dc.rs2]);
+					valid = true;
+					break;
+				case RISCV_OP_ADD_SUB:
+					write_reg(x, dc.rd, x[dc.rs1] - x[dc.rs2]);
+					valid = true;
+					break;
+				}
+				break;
+			}
+//      case RISCV_OP_AND:
+//        write_reg(x, dc.rd, x[dc.rs1] & x[dc.rs2]);
+//        valid = true;
+//        break;
+//      case RISCV_OP_OR:
+//        write_reg(x, dc.rd, x[dc.rs1] | x[dc.rs2]);
+//        valid = true;
+//        break;
+			case RISCV_OP_XOR:
+				write_reg(x, dc.rd, x[dc.rs1] ^ x[dc.rs2]);
+				valid = true;
+				break;
+//      case RISCV_OP_SLT:
+//        write_reg(x, dc.rd, (int32_t)x[dc.rs1] < (int32_t)x[dc.rs2] ? 1 : 0);
+//        valid = true;
+//        break;
+//      case RISCV_OP_SLTU:
+//   		write_reg(x, dc.rd, x[dc.rs1] < x[dc.rs2] ? 1 : 0);
+//        valid = true;
+//        break;
+//      case RISCV_OP_SLL:
+//	    write_reg(x, dc.rd, x[dc.rs1] << x[dc.rs2]);
+//        valid = true;
+//        break;
+//      case RISCV_OP_SR: {
+//        switch (dc.funct7) {
+//        case RISCV_OP_SR_SRA:
+//          write_reg(x, dc.rd, (int32_t)x[dc.rs1] >> x[dc.rs2]);
+//          valid = true;
+//          break;
+//        case RISCV_OP_SR_SRL:
+//        	write_reg(x, dc.rd, x[dc.rs1] >> x[dc.rs2]);
+//           valid = true;
+//          break;
+//        }
+//        break;
+//      }
+			}
+			break;
+		}
+		case RISCV_BR: {
+			switch (dc.funct3) {
+			case RISCV_BR_BEQ:
+				cpu_branch_insn(dc, x[dc.rs1] == x[dc.rs2]);
+				valid = true;
+				break;
+			case RISCV_BR_BLT:
+				cpu_branch_insn(dc, x[dc.rs1] < x[dc.rs2]);
+				valid = true;
+				break;
+			case RISCV_BR_BGE:
+				cpu_branch_insn(dc, x[dc.rs1] >= x[dc.rs2]);
+				valid = true;
+				break;
+			case RISCV_BR_BNE:
+				cpu_branch_insn(dc, x[dc.rs1] != x[dc.rs2]);
+				valid = true;
+				break;
+			}
+			break;
+		}
+//    case RISCV_JAL: {
+//      valid = true;
+//      write_reg(x, dc.rd, next_pc);
+//      next_pc = pc + dc.simm_J;
+//      break;
+//    }
+//    case RISCV_JALR: {
+//      uint32_t rs1_value = x[dc.rs1]; /* Handle the case where rs1 == rd */
+//      valid = true;
+//      write_reg(x, dc.rd, next_pc);
+// 	   next_pc = rs1_value + dc.simm_I;
+//        break;
+//    }
+		case RISCV_ST: {
+			switch (dc.funct3) {
+			case RISCV_ST_SW:
+				addr = ((int) x[dc.rs1]) + (dc.simm_S);
+				offset = byte_offset(addr);
+				valid = (offset % 4) == 0;
+				memw[addr32(addr)] = x[dc.rs2];
+				break;
+			}
+			break;
+		}
+		case RISCV_LD:
+			switch (dc.funct3) {
+			case RISCV_LD_LW:
+				addr = ((int) x[dc.rs1]) + (int) (dc.simm_I);
+				offset = byte_offset(addr);
+				valid = (offset % 4) == 0;
+				write_reg(x, dc.rd, memw[addr32(addr)]);
+				break;
+			}
+			break;
+		default:
+			halted = true;
+		}
 
-    if (valid) {
-      pc = next_pc;
-      if (pc % 4 != 0) {
-        //PRINTF("Unaligned insn address at PC=%08X\n", pc);
-        halted = true;
-      }
-    } else {
-      //printf("UNSUPPORTED INSTRUCTION PC=%08X:[%08X] %-21s \n", pc, ir,
-      //       mnemonic(ir));
-    }
-  } while (cpt < nbinsn);
-  return pc;
+		if (valid) {
+			printf("PC=%08X:[%08X] %-21s \n", pc, ir, mnemonic(ir));
+			insncnt++;
+			pc = next_pc;
+			if (pc % 4 != 0) {
+				printf("Unaligned insn address at PC=%08X\n", pc);
+				halted = true;
+			}
+		} else {
+			printf("UNSUPPORTED INSTRUCTION PC=%08X:[%08X] %-21s \n", pc, ir,
+					mnemonic(ir));
+			halted = true;
+		}
+		if (halted) printf("Processor halted !\n");
+	} while (insncnt < nbinsn);
+	if (halted) {
+		return -1;
+	} else
+		return pc;
 }
 
 int main(int argc, char **argv) {
 
-  bool use_nano_sim = false;
-  FILE *tmp = stdout;
-  int nbopt = 0;
-  for (int k = 1; k < argc; k++) {
-    if (strcmp(argv[k], "-o") == 0) {
-      FILE *ofile = fopen(argv[k + 1], "w");
-      printf("Using output file %s\n", argv[k + 1]);
-      if (ofile == NULL) {
-        return -2;
-      }
-      stdout = ofile;
-      nbopt += 2;
-    }
-  }
-  printf("Reset CPU\n");
-  nano_cpu_run(64);
-  printf("PC=%08X\n", pc);
-  for (int regid = 0; regid < 32; regid++) {
-    printf("%s[%d]=%08X\n", rname(regid), regid, x[regid]);
-  }
-  printf("End of program\n");
-  fclose(stdout);
+	bool use_nano_sim = false;
+	FILE *tmp = stdout;
+	int nbopt = 0;
+	for (int k = 1; k < argc; k++) {
+		if (strcmp(argv[k], "-o") == 0) {
+			FILE *ofile = fopen(argv[k + 1], "w");
+			printf("Using output file %s\n", argv[k + 1]);
+			if (ofile == NULL) {
+				return -2;
+			}
+			stdout = ofile;
+			nbopt += 2;
+		}
+	}
+	printf("Reset CPU\n");
+	int res = nano_cpu_run(64);
+	if (res >= 0) {
+		printf("PC=%08X\n", pc);
+		printf("Executed %08X instructions\n", insncnt);
+		for (int regid = 0; regid < 32; regid++) {
+			printf("%s[%d]=%08X\n", rname(regid), regid, x[regid]);
+		}
+		printf("End of program\n");
+		return 0;
+	} else {
+		printf("Program halted due to error after %d instructions\n", insncnt);
+		for (int regid = 0; regid < 32; regid++) {
+			printf("%s[%d]=%08X\n", rname(regid), regid, x[regid]);
+		}
+		return -1;
+	}
+	fclose(stdout);
 }
 
 #define RANGE(x, ub, lb) ((x & (1 << (ub))) >> lb)
 struct decode_info decode(unsigned int ir) {
 #pragma PURE
 #pragma CONTROL_NODE
-  {
-    struct decode_info res = {};
-    res.opcode = (ir & 0x7f);
-    // res.opcode = RANGE(ir,5,0);
-    res.rd = (ir >> 7) & 0x1f;
-    // res.rd = RANGE(ir,11,7);
-    res.funct3 = (ir >> 12) & 0x07;
-    res.rs1 = (ir >> 15) & 0x1f;
-    res.rs2 = (ir >> 20) & 0x1f;
-    res.funct7 = (ir >> 25) & 0x7f;
-    res.imm_I = (ir >> 20) & 0xfff;
-    res.funct12 = res.imm_I;
-    res.simm_I = (res.imm_I >= (1 << 11)) ? (res.imm_I - (1 << 12)) : res.imm_I;
-    res.imm_S = ((ir >> 7) & 0x01f) | ((ir >> 20) & 0xfe0);
-    res.simm_S = (res.imm_S >= (1 << 11)) ? (res.imm_S - (1 << 12)) : res.imm_S;
-    res.imm_U = (ir & 0xfffff000);
-    res.shamt = (ir >> 20) & 0x1f;
-    res.imm_J = ((ir >> 20) & 0x7fe) | ((ir >> 9) & 0x800) | (ir & 0xff000) |
-                ((ir >> 11) & 0x100000);
-    res.simm_J = (res.imm_J >= (1 << 20)) ? (res.imm_J - (1 << 21)) : res.imm_J;
-    res.br_uoffset = ((ir >> 7) & 0x1e) | ((ir >> 20) & 0x7e0) |
-                     ((ir << 4) & 0x800) | ((ir >> 19) & 0x1000);
-    res.br_offset =
-        (res.br_uoffset >= 4096) ? res.br_uoffset - 8192 : res.br_uoffset;
-    return res;
-  }
+	{
+		struct decode_info res = { };
+		res.opcode = (ir & 0x7f);
+		// res.opcode = RANGE(ir,5,0);
+		res.rd = (ir >> 7) & 0x1f;
+		// res.rd = RANGE(ir,11,7);
+		res.funct3 = (ir >> 12) & 0x07;
+		res.rs1 = (ir >> 15) & 0x1f;
+		res.rs2 = (ir >> 20) & 0x1f;
+		res.funct7 = (ir >> 25) & 0x7f;
+		res.imm_I = (ir >> 20) & 0xfff;
+		res.funct12 = res.imm_I;
+		res.simm_I =
+				(res.imm_I >= (1 << 11)) ? (res.imm_I - (1 << 12)) : res.imm_I;
+		res.imm_S = ((ir >> 7) & 0x01f) | ((ir >> 20) & 0xfe0);
+		res.simm_S =
+				(res.imm_S >= (1 << 11)) ? (res.imm_S - (1 << 12)) : res.imm_S;
+		res.imm_U = (ir & 0xfffff000);
+		res.shamt = (ir >> 20) & 0x1f;
+		res.imm_J = ((ir >> 20) & 0x7fe) | ((ir >> 9) & 0x800) | (ir & 0xff000)
+				| ((ir >> 11) & 0x100000);
+		res.simm_J =
+				(res.imm_J >= (1 << 20)) ? (res.imm_J - (1 << 21)) : res.imm_J;
+		res.br_uoffset = ((ir >> 7) & 0x1e) | ((ir >> 20) & 0x7e0)
+				| ((ir << 4) & 0x800) | ((ir >> 19) & 0x1000);
+		res.br_offset =
+				(res.br_uoffset >= 4096) ?
+						res.br_uoffset - 8192 : res.br_uoffset;
+		return res;
+	}
 }
 
 #ifndef __SYNTHESIS__
 
 char buffer[4096];
 
-char const *regnames[32] = {
-    "zero", "ra", "sp", "gp", "tp",  "t0",  "t1", "t2", "s0/fp", "s1", "a0",
-    "a1",   "a2", "a3", "a4", "a5",  "a6",  "a7", "s2", "s3",    "s4", "s5",
-    "s6",   "s7", "s8", "s9", "s10", "s11", "t3", "t4", "t5",    "t6"};
+char const *regnames[32] = { "zero", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
+		"s0/fp", "s1", "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7", "s2",
+		"s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "t3", "t4",
+		"t5", "t6" };
 
-char const *optypes[8] = {"add", "sll", "slt", "sltu",
-                          "xor", "sr",  "or",  "and"};
-char const *immtypes[8] = {"addi", "slli", "slti", "sltiu",
-                           "xori", "sri",  "ori",  "andi"};
-char const *brtypes[8] = {"beq", "bne", "?", "?", "blt", "bge", "bltu", "bgeu"};
-char const *ldtypes[8] = {"lb", "lh", "lw", "?", "lbu", "lhu", "?", "?"};
-char const *sttypes[8] = {"sb", "sh", "sw", "?", "?", "?", "?", "?"};
+char const *optypes[8] =
+		{ "add", "sll", "slt", "sltu", "xor", "sr", "or", "and" };
+char const *immtypes[8] = { "addi", "slli", "slti", "sltiu", "xori", "sri",
+		"ori", "andi" };
+char const *brtypes[8] =
+		{ "beq", "bne", "?", "?", "blt", "bge", "bltu", "bgeu" };
+char const *ldtypes[8] = { "lb", "lh", "lw", "?", "lbu", "lhu", "?", "?" };
+char const *sttypes[8] = { "sb", "sh", "sw", "?", "?", "?", "?", "?" };
 
-char *rname(unsigned int ir) { return (char *)regnames[ir]; }
-
-char csrbuffer[128];
-char *csrname(unsigned int csrid) {
-  switch (csrid) {
-  case RISCV_CSR_MCYCLE:
-    return (char *)"mcycle";
-  case RISCV_CSR_MINSTRET:
-    return (char *)"minstret";
-  case RISCV_CSR_MHARTID:
-    return (char *)"mhartid";
-  default: {
-    sprintf(csrbuffer, "csr[%d]", csrid);
-    return csrbuffer;
-  }
-  }
+char* rname(unsigned int ir) {
+	return (char*) regnames[ir];
 }
 
-char *mnemonic(unsigned int ir) {
+char csrbuffer[128];
+char* csrname(unsigned int csrid) {
+	switch (csrid) {
+	case RISCV_CSR_MCYCLE:
+		return (char*) "mcycle";
+	case RISCV_CSR_MINSTRET:
+		return (char*) "minstret";
+	case RISCV_CSR_MHARTID:
+		return (char*) "mhartid";
+	default: {
+		sprintf(csrbuffer, "csr[%d]", csrid);
+		return csrbuffer;
+	}
+	}
+}
 
-  const char *rs1, *rs2, *rd, *csr;
-  unsigned int simm_I;
-  unsigned int simm_S;
-  struct decode_info dc;
-  dc = decode(ir);
-  rd = regnames[dc.rd];
-  rs1 = regnames[dc.rs1];
-  rs2 = regnames[dc.rs2];
-  csr = csrname(dc.rs2);
-  simm_I = dc.simm_I;
-  simm_S = dc.simm_S;
+char* mnemonic(unsigned int ir) {
 
-  switch (dc.opcode) {
-  case RISCV_LUI: {
-    sprintf(buffer, "lui %s,%08X", rd, dc.imm_U);
-    break;
-  }
-  case RISCV_AUIPC: {
-    sprintf(buffer, "aui %s,pc+%08X", rd, dc.imm_U);
-    break;
-  }
-  case RISCV_OPI: {
+	const char *rs1, *rs2, *rd, *csr;
+	unsigned int simm_I;
+	unsigned int simm_S;
+	struct decode_info dc;
+	dc = decode(ir);
+	rd = regnames[dc.rd];
+	rs1 = regnames[dc.rs1];
+	rs2 = regnames[dc.rs2];
+	csr = csrname(dc.rs2);
+	simm_I = dc.simm_I;
+	simm_S = dc.simm_S;
 
-    if (dc.funct3 == RISCV_OPI_SRI) {
-      if (dc.simm_I & 0xF00) {
-        sprintf(buffer, "srai %s,%s,%08X", rd, rs1, dc.simm_I);
-      } else {
-        sprintf(buffer, "srli %s,%s,%08X", rd, rs1, dc.simm_I);
-      }
-    } else {
-      sprintf(buffer, "%s %s,%s,%08X", immtypes[dc.funct3], rd, rs1, dc.simm_I);
-    }
+	switch (dc.opcode) {
+	case RISCV_LUI: {
+		sprintf(buffer, "lui %s,%08X", rd, dc.imm_U);
+		break;
+	}
+	case RISCV_AUIPC: {
+		sprintf(buffer, "aui %s,pc+%08X", rd, dc.imm_U);
+		break;
+	}
+	case RISCV_OPI: {
 
-    break;
-  }
-  case RISCV_OP: {
-    sprintf(buffer, "%s %s,%s,%s", optypes[dc.funct3], rd, rs1, rs2);
-    if (dc.funct3 == RISCV_OP_SR) {
-      if (dc.funct7 == RISCV_OP_SR_SRA) {
-        sprintf(buffer, "sra %s,%s,%s", rd, rs1, rs2);
-      } else {
-        sprintf(buffer, "srl %s,%s,%s", rd, rs1, rs2);
-      }
-    }
-    break;
-  }
-  case RISCV_BR: {
-    sprintf(buffer, "%s %s,%s,%08X", brtypes[dc.funct3], rs1, rs2,
-            (dc.br_offset));
-    break;
-  }
-  case RISCV_ST: {
-    sprintf(buffer, "%s %s,%s(%d:%d)", sttypes[dc.funct3], rs2, rs1, dc.simm_S,
-            dc.imm_S);
-    break;
-  }
-  case RISCV_LD: {
-    sprintf(buffer, "%s %s,%s(%d:%d)", ldtypes[dc.funct3], rd, rs1, dc.simm_I,
-            dc.imm_I);
-    break;
-  }
-  case RISCV_JAL: {
-    if (dc.rd == 0) {
-      sprintf(buffer, "j %d", dc.simm_J);
-    } else {
-      sprintf(buffer, "jal %s, %d", rd, dc.simm_J);
-    }
-    break;
-  }
-  case RISCV_JALR: {
-    sprintf(buffer, "jalr %s,%s,%d", rd, rs1, dc.simm_J);
-    break;
-  }
-  case RISCV_SYS: {
+		if (dc.funct3 == RISCV_OPI_SRI) {
+			if (dc.simm_I & 0xF00) {
+				sprintf(buffer, "srai %s,%s,%08X", rd, rs1, dc.simm_I);
+			} else {
+				sprintf(buffer, "srli %s,%s,%08X", rd, rs1, dc.simm_I);
+			}
+		} else {
+			sprintf(buffer, "%s %s,%s,%08X", immtypes[dc.funct3], rd, rs1,
+					dc.simm_I);
+		}
 
-    switch (dc.funct3) {
-    case RISCV_SYS_PRIVILEGED:
-      switch (dc.imm_I) {
-      case RISCV_SYS_ECALL: {
-        sprintf(buffer, "ecall");
-        break;
-      }
-      case RISCV_SYS_EBREAK: {
-        sprintf(buffer, "ebreak");
-        break;
-      }
-      case RISCV_SYS_SRET: {
-        sprintf(buffer, "sret");
-        break;
-      }
-      case RISCV_SYS_URET: {
-        sprintf(buffer, "uret");
-        break;
-      }
-      case RISCV_SYS_MRET: {
-        sprintf(buffer, "mret");
-        break;
-      }
-      case RISCV_SYS_WFI: {
-        // WFI : wait for interrupt
-        sprintf(buffer, "wfi");
-        break;
-      }
-      }
-      break;
+		break;
+	}
+	case RISCV_OP: {
+		sprintf(buffer, "%s %s,%s,%s", optypes[dc.funct3], rd, rs1, rs2);
+		if (dc.funct3 == RISCV_OP_SR) {
+			if (dc.funct7 == RISCV_OP_SR_SRA) {
+				sprintf(buffer, "sra %s,%s,%s", rd, rs1, rs2);
+			} else {
+				sprintf(buffer, "srl %s,%s,%s", rd, rs1, rs2);
+			}
+		}
+		break;
+	}
+	case RISCV_BR: {
+		sprintf(buffer, "%s %s,%s,%08X", brtypes[dc.funct3], rs1, rs2,
+				(dc.br_offset));
+		break;
+	}
+	case RISCV_ST: {
+		sprintf(buffer, "%s %s,%s(%d:%d)", sttypes[dc.funct3], rs2, rs1,
+				dc.simm_S, dc.imm_S);
+		break;
+	}
+	case RISCV_LD: {
+		sprintf(buffer, "%s %s,%s(%d:%d)", ldtypes[dc.funct3], rd, rs1,
+				dc.simm_I, dc.imm_I);
+		break;
+	}
+	case RISCV_JAL: {
+		if (dc.rd == 0) {
+			sprintf(buffer, "j %d", dc.simm_J);
+		} else {
+			sprintf(buffer, "jal %s, %d", rd, dc.simm_J);
+		}
+		break;
+	}
+	case RISCV_JALR: {
+		sprintf(buffer, "jalr %s,%s,%d", rd, rs1, dc.simm_J);
+		break;
+	}
+	case RISCV_SYS: {
 
-    case RISCV_CSRRW:
-      sprintf(buffer, "csrrw csr[%03X],%s", dc.imm_I, rs1);
-      break;
-    case RISCV_CSRRS:
-      sprintf(buffer, "csrrs csr[%03X],%s", dc.imm_I, rs1);
-      break;
-    case RISCV_CSRRC:
-      sprintf(buffer, "csrrc csr[%03X],%s", dc.imm_I, rs1);
-      break;
-    case RISCV_CSRRWI:
-      sprintf(buffer, "csrrwi csr[%03X],%02X", dc.imm_I, dc.rs1);
-      break;
-    case RISCV_CSRRSI:
-      sprintf(buffer, "csrrsi csr[%03X],%02X", dc.imm_I, dc.rs1);
-      break;
-    case RISCV_CSRRCI:
-      sprintf(buffer, "csrrci csr[%03X],%02X", dc.imm_I, dc.rs1);
-      break;
+		switch (dc.funct3) {
+		case RISCV_SYS_PRIVILEGED:
+			switch (dc.imm_I) {
+			case RISCV_SYS_ECALL: {
+				sprintf(buffer, "ecall");
+				break;
+			}
+			case RISCV_SYS_EBREAK: {
+				sprintf(buffer, "ebreak");
+				break;
+			}
+			case RISCV_SYS_SRET: {
+				sprintf(buffer, "sret");
+				break;
+			}
+			case RISCV_SYS_URET: {
+				sprintf(buffer, "uret");
+				break;
+			}
+			case RISCV_SYS_MRET: {
+				sprintf(buffer, "mret");
+				break;
+			}
+			case RISCV_SYS_WFI: {
+				// WFI : wait for interrupt
+				sprintf(buffer, "wfi");
+				break;
+			}
+			}
+			break;
 
-    default:
-      break;
-    }
+		case RISCV_CSRRW:
+			sprintf(buffer, "csrrw csr[%03X],%s", dc.imm_I, rs1);
+			break;
+		case RISCV_CSRRS:
+			sprintf(buffer, "csrrs csr[%03X],%s", dc.imm_I, rs1);
+			break;
+		case RISCV_CSRRC:
+			sprintf(buffer, "csrrc csr[%03X],%s", dc.imm_I, rs1);
+			break;
+		case RISCV_CSRRWI:
+			sprintf(buffer, "csrrwi csr[%03X],%02X", dc.imm_I, dc.rs1);
+			break;
+		case RISCV_CSRRSI:
+			sprintf(buffer, "csrrsi csr[%03X],%02X", dc.imm_I, dc.rs1);
+			break;
+		case RISCV_CSRRCI:
+			sprintf(buffer, "csrrci csr[%03X],%02X", dc.imm_I, dc.rs1);
+			break;
 
-    break;
-  }
-  case RISCV_MM:
-    sprintf(buffer, "fence");
-    break;
-  default: {
-    sprintf(buffer, "UNKNOWN INSTRUCTION OPCODE=%02X", dc.opcode);
-    break;
-  }
-  }
-  return buffer;
+		default:
+			break;
+		}
+
+		break;
+	}
+	case RISCV_MM:
+		sprintf(buffer, "fence");
+		break;
+	default: {
+		sprintf(buffer, "UNKNOWN INSTRUCTION OPCODE=%02X", dc.opcode);
+		break;
+	}
+	}
+	return buffer;
 }
 #endif
