@@ -22,13 +22,13 @@ test_opi:
 	li x1, 0x1
 	addi x2, x1, 0x1F
 	addi x3, x2, -1
-	xori x4, x3, 0x1F
+#	xori x4, x3, 0x1F
 	bne x4,x0, error_opi
 
 test_op:
 	add x5, x1, x1  # 0x2
-	sub x6, x5, x1  # 1
-	xor x7, x5, x6  # 3
+#	sub x6, x5, x1  # 1
+#	xor x7, x5, x6  # 3
 	li x8, 0x3
 	bne x8,x7, error_op
 

@@ -108,17 +108,31 @@ char *mnemonic(unsigned int ir) {
 
     break;
   }
-  case RISCV_OP: {
-    sprintf(buffer, "%s %s,%s,%s", optypes[dc.funct3], rd, rs1, rs2);
-    if (dc.funct3 == RISCV_OP_SR) {
-      if (dc.funct7 == RISCV_OP_SR_SRA) {
-        sprintf(buffer, "sra %s,%s,%s", rd, rs1, rs2);
-      } else {
-        sprintf(buffer, "srl %s,%s,%s", rd, rs1, rs2);
-      }
-    }
-    break;
-  }
+	case RISCV_OP: {
+		switch (dc.funct3) {
+			case RISCV_OP_ADD:
+				switch (dc.funct7) {
+				case RISCV_OP_ADD_ADD:
+					sprintf(buffer, "add %s,%s,%s", rd, rs1, rs2);
+					break;
+				case RISCV_OP_ADD_SUB:
+					sprintf(buffer, "sub %s,%s,%s", rd, rs1, rs2);
+					break;
+				}
+				break;
+			case RISCV_OP_SR:
+				if (dc.funct7 == RISCV_OP_SR_SRA) {
+					sprintf(buffer, "sra %s,%s,%s", rd, rs1, rs2);
+				} else {
+					sprintf(buffer, "srl %s,%s,%s", rd, rs1, rs2);
+				}
+				break;
+			default:
+				sprintf(buffer, "%s %s,%s,%s", optypes[dc.funct3], rd, rs1, rs2);
+				break;
+		}
+		break;
+	}
   case RISCV_BR: {
     sprintf(buffer, "%s %s,%s,%08X", brtypes[dc.funct3], rs1, rs2,
             (dc.br_offset));
