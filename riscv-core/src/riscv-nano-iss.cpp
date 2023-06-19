@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ac_int.h>
 
 #define RISCV_LD 0x03    // LOAD
 #define RISCV_LDF 0x07   // LOAD-FP
@@ -217,50 +218,45 @@
 #define MEMSIZE 0x10000000
 #define IOSIZE 0x10000000
 
-#if MEMSIZE<0x00000070 
+#if MEMSIZE<0x0000000C
 #error binary image does not fit memory 
 #endif
-unsigned int memw[MEMSIZE / 4] = { 0x00100093, // 00000000: addi ra,zero,00000001,
-		0x00009A63, // 00000004: bne ra,zero,00000014,
-		0x00009063, // 00000008: bne ra,zero,00000000,
-		0x00009063, // 0000000C: bne ra,zero,00000000,
-		0x00009063, // 00000010: bne ra,zero,00000000,
-		0x00009063, // 00000014: bne ra,zero,00000000,
-		0x00100093, // 00000018: addi ra,zero,00000001,
-		0x01F08113, // 0000001C: addi sp,ra,0000001F,
-		0xFFF10193, // 00000020: addi gp,sp,FFFFFFFF,
-		0x01F1C213, // 00000024: xori tp,gp,0000001F,
-		0xFE0212E3, // 00000028: bne tp,zero,FFFFFFE4,
-		0x001082B3, // 0000002C: add t0,ra,ra,
-		0x40128333, // 00000030: add t1,t0,ra,
-		0x0062C3B3, // 00000034: xor t2,t0,t1,
-		0x00300413, // 00000038: addi s0/fp,zero,00000003,
-		0xFC741AE3, // 0000003C: bne s0/fp,t2,FFFFFFD4,
-		0x06000493, // 00000040: addi s1,zero,00000060,
-		0x0004A503, // 00000044: lw a0,s1(0:0),
-		0x1FF57593, // 00000048: andi a1,a0,000001FF,
-		0x1EF00613, // 0000004C: addi a2,zero,000001EF,
-		0xFCB612E3, // 00000050: bne a2,a1,FFFFFFC4,
-		0x00009063, // 00000054: bne ra,zero,00000000,
-		0x00000000, // 00000058: UNKNOWN INSTRUCTION OPCODE=00,
-		0x00000000, // 0000005C: UNKNOWN INSTRUCTION OPCODE=00,
-		0xDEADBEEF, // 00000060: jal t4, -534,
-		0xBABEFACE, // 00000064: UNKNOWN INSTRUCTION OPCODE=4E,
-		0x1BADCAFE, // 00000068: UNKNOWN INSTRUCTION OPCODE=7E,
-		0x1BADCAFE, // 0000006C: UNKNOWN INSTRUCTION OPCODE=7E
-		};
-unsigned char mem0[MEMSIZE / 4] = { 0x93, 0x63, 0x63, 0x63, 0x63, 0x63, 0x93,
-		0x13, 0x93, 0x13, 0xE3, 0xB3, 0x33, 0xB3, 0x13, 0xE3, 0x93, 0x03, 0x93,
-		0x13, 0xE3, 0x63, 0x00, 0x00, 0xEF, 0xCE, 0xFE, 0xFE };
-unsigned char mem1[MEMSIZE / 4] = { 0x00, 0x9A, 0x90, 0x90, 0x90, 0x90, 0x00,
-		0x81, 0x01, 0xC2, 0x12, 0x82, 0x83, 0xC3, 0x04, 0x1A, 0x04, 0xA5, 0x75,
-		0x06, 0x12, 0x90, 0x00, 0x00, 0xBE, 0xFA, 0xCA, 0xCA };
-unsigned char mem2[MEMSIZE / 4] = { 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10,
-		0xF0, 0xF1, 0xF1, 0x02, 0x10, 0x12, 0x62, 0x30, 0x74, 0x00, 0x04, 0xF5,
-		0xF0, 0xB6, 0x00, 0x00, 0x00, 0xAD, 0xBE, 0xAD, 0xAD };
-unsigned char mem3[MEMSIZE / 4] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x01, 0xFF, 0x01, 0xFE, 0x00, 0x40, 0x00, 0x00, 0xFC, 0x06, 0x00, 0x1F,
-		0x1E, 0xFC, 0x00, 0x00, 0x00, 0xDE, 0xBA, 0x1B, 0x1B };
+unsigned int memw[MEMSIZE/4]= {
+	0x01000393, // 00000000: addi t2,zero,00000010,
+	0x00741063, // 00000004: bne s0/fp,t2,00000000,
+	0x00741063, // 00000008: bne s0/fp,t2,00000000
+	0x00741063, // 00000008: bne s0/fp,t2,00000000
+	0x00741063, // 00000008: bne s0/fp,t2,00000000
+	0x00741063, // 00000008: bne s0/fp,t2,00000000
+	0x00741063, // 00000008: bne s0/fp,t2,00000000
+	0x00741063, // 00000008: bne s0/fp,t2,00000000
+	0x00741063, // 00000008: bne s0/fp,t2,00000000
+	0x00741063, // 00000008: bne s0/fp,t2,00000000
+	0x00741063, // 00000008: bne s0/fp,t2,00000000
+	0x00741063, // 00000008: bne s0/fp,t2,00000000
+	0x00741063, // 00000008: bne s0/fp,t2,00000000
+	0x00741063, // 00000008: bne s0/fp,t2,00000000
+};
+unsigned char mem0[MEMSIZE/4]= {
+	0x93 ,
+	0x63 ,
+	0x63
+};
+unsigned char mem1[MEMSIZE/4]= {
+	0x03 ,
+	0x10 ,
+	0x10
+};
+unsigned char mem2[MEMSIZE/4]= {
+	0x00 ,
+	0x74 ,
+	0x74
+};
+unsigned char mem3[MEMSIZE/4]= {
+	0x01 ,
+	0x00 ,
+	0x00
+};
 
 int add_hw_bkpt(uint32_t addr);
 
@@ -285,26 +281,49 @@ uint32_t cpu_getpc();
 int cpu_getreg(uint16_t id);
 int cpu_setreg(uint16_t id, uint32_t value);
 int cpu_info(uint8_t id);
-
+////#define NO_AC_INT
+//#ifdef NO_AC_INT
+//struct decode_info {
+//	unsigned char opcode;
+//	unsigned char rd;
+//	unsigned char funct3;
+//	unsigned char rs1;
+//	unsigned char rs2;
+//	unsigned char funct7;
+//	unsigned short imm_I;
+//	unsigned short funct12;
+//	short simm_I;
+//	unsigned short imm_S;
+//	short simm_S;
+//	unsigned int imm_U;
+//	unsigned char shamt;
+//	unsigned int imm_J;
+//	int simm_J;
+//	unsigned short br_uoffset;
+//	short br_offset;
+//};
+//#else
 struct decode_info {
-	unsigned char opcode;
-	unsigned char rd;
-	unsigned char funct3;
-	unsigned char rs1;
-	unsigned char rs2;
-	unsigned char funct7;
+	ac_int<7, false> opcode;
+	ac_int<5, false> rd;
+	ac_int<3, false> funct3;
+	ac_int<5, false> rs1;
+	ac_int<5, false> rs2;
+	ac_int<7, false> funct7;
 	unsigned short imm_I;
 	unsigned short funct12;
 	short simm_I;
 	unsigned short imm_S;
 	short simm_S;
 	unsigned int imm_U;
-	unsigned char shamt;
+	ac_int<5, false> shamt;
 	unsigned int imm_J;
 	int simm_J;
 	unsigned short br_uoffset;
 	short br_offset;
 };
+
+//#endif
 
 struct decode_info decode(unsigned int ir);
 char* mnemonic(unsigned int ir);
@@ -342,7 +361,7 @@ void trace_io(uint32_t addr, uint32_t value) {}
 #endif
 
 void write_reg(uint32_t x[32], uint32_t rd, int value) {
-	if (rd != 0 && rd < 32) {
+	if (rd != 0 && rd <= 31) {
 		x[rd] = value;
 		// printf("%s[%d]=%08X\n",rname(rd),rd,value);
 	}
@@ -358,6 +377,100 @@ void cpu_branch_insn(struct decode_info dc, bool taken) {
 uint32_t byte_offset(uint32_t addr) {
 	return (addr & 0x3);
 }
+
+
+#define RISCV_PICO
+//#define RISCV_FEMTO
+//#define RISCV_NANO
+
+#ifdef RISCV_FEMTO
+#define USE_BNE
+#define USE_ADD
+#define USE_ADDI
+
+#endif
+
+#ifdef RISCV_PICO
+#define USE_BNE
+#define USE_ADD
+#define USE_SUB
+#define USE_AND
+#define USE_XORI
+#define USE_ADDI
+#define USE_LD
+#define USE_SW
+#endif
+
+#ifdef RISCV_NANO
+#define USE_BEQ
+#define USE_BLE
+#define USE_BLT
+#define USE_BNE
+#define USE_BGE
+#define USE_BE
+
+#define USE_ADDI
+#define USE_ADD
+#define USE_SUB
+#define USE_AND
+#define USE_ANDI
+#define USE_OR
+#define USE_ORI
+#define USE_XOR
+#define USE_XORI
+
+#define USE_SLTI
+#define USE_SLTIU
+
+#define USE_SLLI
+#define USE_SRI
+
+#define USE_LD
+#define USE_ST
+
+#define USE_JAL
+#define USE_JALR
+
+#define USE_LUI
+#define USE_AUIPC
+
+#endif
+
+#ifdef RISCV_I32
+#define USE_BEQ
+#define USE_BLE
+#define USE_BLT
+#define USE_BNE
+#define USE_BGE
+#define USE_BE
+
+#define USE_ADD
+#define USE_SUB
+#define USE_AND
+#define USE_ANDI
+#define USE_OR
+#define USE_ORI
+#define USE_XOR
+#define USE_XORI
+
+#define USE_SLTI
+#define USE_SLTIU
+#define USE_SLLI
+#define USE_SRI
+#define USE_SRA
+#define USE_SRL
+
+#define USE_ADDI
+#define USE_LD
+#define USE_ST
+
+#define USE_JAL
+#define USE_JALR
+
+#define USE_LUI
+#define USE_AUIPC
+#endif
+
 
 uint32_t nano_cpu_run(int nbinsn) {
 	uint32_t ir;
@@ -383,152 +496,202 @@ uint32_t nano_cpu_run(int nbinsn) {
 		ir = memw[addr];
 		dc = decode(ir);
 
-		//printf("PC=%08X:[%08X] %-21s \n", pc, ir, mnemonic(ir));
-
 		next_pc = pc + 4;
 		insncnt++;
 		switch (dc.opcode) {
+#ifdef USE_LUI
+			case RISCV_LUI:
+			  write_reg(x, dc.rd, dc.imm_U);
+			  valid = true;
+			  break;
+#endif
+#ifdef USE_AUIPC
+			case RISCV_AUIPC:
+			  write_reg(x, dc.rd, pc + dc.imm_U);
+			  valid = true;
+			  break;
+#endif
 
-//    case RISCV_LUI:
-//      write_reg(x, dc.rd, dc.imm_U);
-//      valid = true;
-//      break;
-//    case RISCV_AUIPC:
-//      write_reg(x, dc.rd, pc + dc.imm_U);
-//      valid = true;
-//      break;
 		case RISCV_OPI: {
-
 			switch (dc.funct3) {
-			case RISCV_OPI_ADDI:
-				write_reg(x, dc.rd, x[dc.rs1] + dc.simm_I);
-				valid = true;
-				break;
-			case RISCV_OPI_ANDI:
-				write_reg(x, dc.rd, x[dc.rs1] & dc.simm_I);
-				valid = true;
-				break;
-//      case RISCV_OPI_ORI:
-//        write_reg(x, dc.rd, x[dc.rs1] | dc.simm_I);
-//        valid = true;
-//        break;
-			case RISCV_OPI_XORI:
-				write_reg(x, dc.rd, x[dc.rs1] ^ dc.simm_I);
-				valid = true;
-				break;
-//      case RISCV_OPI_SLTI:
-//        write_reg(x, dc.rd, ((int)x[dc.rs1] < dc.simm_I) ? 1 : 0);
-//        valid = true;
-//        break;
-//      case RISCV_OPI_SLTIU:
-//        write_reg(x, dc.rd, (x[dc.rs1] < dc.simm_I) ? 1 : 0);
-//        valid = true;
-//        break;
-//      case RISCV_OPI_SRI:
-//        if (dc.funct7 == RISCV_OPI_SRI_SRAI) {
-//          write_reg(x, dc.rd, (((int)x[dc.rs1]) >> dc.shamt));
-//         valid = true;
-//        } else if (dc.funct7 == RISCV_OPI_SRI_SRLI) {
-//          write_reg(x, dc.rd, (x[dc.rs1] >> dc.shamt));
-//           valid = true;
-//        }
-//        break;
-//       case RISCV_OPI_SLLI:
-//        write_reg(x, dc.rd, (x[dc.rs1] << (dc.shamt)));
-//        valid = true;
-//        break;
+				#ifdef USE_ADDI
+				case RISCV_OPI_ADDI:
+					write_reg(x, dc.rd, x[dc.rs1] + dc.simm_I);
+					valid = true;
+					break;
+				#endif
+				#ifdef USE_ANDI
+				case RISCV_OPI_ANDI:
+					write_reg(x, dc.rd, x[dc.rs1] & dc.simm_I);
+					valid = true;
+					break;
+				#endif
+				#ifdef USE_ORI
+				case RISCV_OPI_ORI:
+					write_reg(x, dc.rd, x[dc.rs1] | dc.simm_I);
+					valid = true;
+					break;
+				#endif
+				#ifdef USE_XORI
+				case RISCV_OPI_XORI:
+					write_reg(x, dc.rd, x[dc.rs1] ^ dc.simm_I);
+					valid = true;
+					break;
+				#endif
+				#ifdef USE_SLTI
+				case RISCV_OPI_SLTI:
+					write_reg(x, dc.rd, ((int)x[dc.rs1] < dc.simm_I) ? 1 : 0);
+					valid = true;
+					break;
+				#endif
+				#ifdef USE_SLTIU
+				case RISCV_OPI_SLTIU:
+					write_reg(x, dc.rd, (x[dc.rs1] < dc.simm_I) ? 1 : 0);
+					valid = true;
+					break;
+				#endif
+				#ifdef USE_SRI
+				case RISCV_OPI_SRI:
+					if (dc.funct7 == RISCV_OPI_SRI_SRAI) {
+						write_reg(x, dc.rd, (((int)x[dc.rs1]) >> dc.shamt));
+						valid = true;
+					} else if (dc.funct7 == RISCV_OPI_SRI_SRLI) {
+						write_reg(x, dc.rd, (x[dc.rs1] >> dc.shamt));
+						valid = true;
+					}
+					break;
+				#endif
+				#ifdef USE_SLLI
+				case RISCV_OPI_SLLI:
+					write_reg(x, dc.rd, (x[dc.rs1] << (dc.shamt)));
+					valid = true;
+					break;
+				#endif
+				default:
+					break;
 			}
 			break;
 		}
+
 		case RISCV_OP: {
 			switch (dc.funct3) {
 			case RISCV_OP_ADD: {
 				switch (dc.funct7) {
+				#ifdef USE_ADD
 				case RISCV_OP_ADD_ADD:
 					write_reg(x, dc.rd, x[dc.rs1] + x[dc.rs2]);
 					valid = true;
 					break;
+				#endif
+				#ifdef USE_SUB
 				case RISCV_OP_ADD_SUB:
 					write_reg(x, dc.rd, x[dc.rs1] - x[dc.rs2]);
 					valid = true;
 					break;
+				#endif
+				default:{
+
+				}
 				}
 				break;
 			}
-//      case RISCV_OP_AND:
-//        write_reg(x, dc.rd, x[dc.rs1] & x[dc.rs2]);
-//        valid = true;
-//        break;
-//      case RISCV_OP_OR:
-//        write_reg(x, dc.rd, x[dc.rs1] | x[dc.rs2]);
-//        valid = true;
-//        break;
+			#ifdef USE_AND
+			case RISCV_OP_AND:
+				write_reg(x, dc.rd, x[dc.rs1] & x[dc.rs2]);
+				valid = true; break;
+			#endif
+			#ifdef USE_OR
+			case RISCV_OP_OR:
+				write_reg(x, dc.rd, x[dc.rs1] | x[dc.rs2]);
+				valid = true; break;
+			#endif
+			#ifdef USE_XOR
 			case RISCV_OP_XOR:
 				write_reg(x, dc.rd, x[dc.rs1] ^ x[dc.rs2]);
-				valid = true;
+				valid = true; break;
+			#endif
+			#ifdef USE_SLT
+			case RISCV_OP_SLT:
+				write_reg(x, dc.rd, (int32_t)x[dc.rs1] < (int32_t)x[dc.rs2] ? 1 : 0);
+				valid = true; break;
+			#endif
+			#ifdef USE_SLTU
+			case RISCV_OP_SLTU:
+				write_reg(x, dc.rd, x[dc.rs1] < x[dc.rs2] ? 1 : 0);
+				valid = true; break;
+			#endif
+			#ifdef USE_SLL
+			case RISCV_OP_SLL:
+				write_reg(x, dc.rd, x[dc.rs1] << x[dc.rs2]);
+				valid = true; break;
+			#endif
+			case RISCV_OP_SR: {
+				switch (dc.funct7) {
+				#ifdef USE_SRA
+				case RISCV_OP_SR_SRA:
+					write_reg(x, dc.rd, (int32_t)x[dc.rs1] >> x[dc.rs2]);
+					valid = true; break;
+				#endif
+				#ifdef USE_SRL
+				case RISCV_OP_SR_SRL:
+					write_reg(x, dc.rd, x[dc.rs1] >> x[dc.rs2]);
+					valid = true; break;
+				#endif
+				default: break;
+				}
 				break;
-//      case RISCV_OP_SLT:
-//        write_reg(x, dc.rd, (int32_t)x[dc.rs1] < (int32_t)x[dc.rs2] ? 1 : 0);
-//        valid = true;
-//        break;
-//      case RISCV_OP_SLTU:
-//   		write_reg(x, dc.rd, x[dc.rs1] < x[dc.rs2] ? 1 : 0);
-//        valid = true;
-//        break;
-//      case RISCV_OP_SLL:
-//	    write_reg(x, dc.rd, x[dc.rs1] << x[dc.rs2]);
-//        valid = true;
-//        break;
-//      case RISCV_OP_SR: {
-//        switch (dc.funct7) {
-//        case RISCV_OP_SR_SRA:
-//          write_reg(x, dc.rd, (int32_t)x[dc.rs1] >> x[dc.rs2]);
-//          valid = true;
-//          break;
-//        case RISCV_OP_SR_SRL:
-//        	write_reg(x, dc.rd, x[dc.rs1] >> x[dc.rs2]);
-//           valid = true;
-//          break;
-//        }
-//        break;
-//      }
 			}
-			break;
+		}
+		break;
 		}
 		case RISCV_BR: {
 			switch (dc.funct3) {
+			#ifdef USE_BEQ
 			case RISCV_BR_BEQ:
 				cpu_branch_insn(dc, x[dc.rs1] == x[dc.rs2]);
 				valid = true;
 				break;
+			#endif
+			#ifdef USE_BLT
 			case RISCV_BR_BLT:
 				cpu_branch_insn(dc, x[dc.rs1] < x[dc.rs2]);
 				valid = true;
 				break;
+			#endif
+			#ifdef USE_BGE
 			case RISCV_BR_BGE:
 				cpu_branch_insn(dc, x[dc.rs1] >= x[dc.rs2]);
 				valid = true;
 				break;
+			#endif
+			#ifdef USE_BNE
 			case RISCV_BR_BNE:
 				cpu_branch_insn(dc, x[dc.rs1] != x[dc.rs2]);
 				valid = true;
 				break;
+			#endif
+			default : break;
 			}
 			break;
 		}
-//    case RISCV_JAL: {
-//      valid = true;
-//      write_reg(x, dc.rd, next_pc);
-//      next_pc = pc + dc.simm_J;
-//      break;
-//    }
-//    case RISCV_JALR: {
-//      uint32_t rs1_value = x[dc.rs1]; /* Handle the case where rs1 == rd */
-//      valid = true;
-//      write_reg(x, dc.rd, next_pc);
-// 	   next_pc = rs1_value + dc.simm_I;
-//        break;
-//    }
+		#ifdef USE_JAL
+		case RISCV_JAL: {
+			valid = true;
+			write_reg(x, dc.rd, next_pc);
+			next_pc = pc + dc.simm_J;
+			break;
+		}
+		#endif
+		#ifdef USE_JALR
+		case RISCV_JALR: {
+			uint32_t rs1_value = x[dc.rs1]; /* Handle the case where rs1 == rd */
+			valid = true;
+			write_reg(x, dc.rd, next_pc);
+			next_pc = rs1_value + dc.simm_I;
+			break;
+		}
+		#endif
+		#ifdef USE_ST
 		case RISCV_ST: {
 			switch (dc.funct3) {
 			case RISCV_ST_SW:
@@ -540,6 +703,8 @@ uint32_t nano_cpu_run(int nbinsn) {
 			}
 			break;
 		}
+		#endif
+		#ifdef USE_LD
 		case RISCV_LD:
 			switch (dc.funct3) {
 			case RISCV_LD_LW:
@@ -550,6 +715,7 @@ uint32_t nano_cpu_run(int nbinsn) {
 				break;
 			}
 			break;
+		#endif
 		default:
 			halted = true;
 		}
@@ -575,40 +741,71 @@ uint32_t nano_cpu_run(int nbinsn) {
 		return pc;
 }
 
+
+int loadbinary(char *filename) {
+  int i;
+  FILE *f;
+  char buffer[16];
+  f = fopen(filename, "r");
+  i = 0;
+  if (f != NULL) {
+    while (!feof(f) && i < (MEMSIZE/4)) {
+      fread(memw, 1, 4, f);
+      i += 1;
+    }
+    fclose(f);
+    return i;
+  } else {
+    fprintf(stderr, "Could not open %s\n", filename);
+    return -1;
+  }
+}
+
 int main(int argc, char **argv) {
 
-	bool use_nano_sim = false;
-	FILE *tmp = stdout;
-	int nbopt = 0;
-	for (int k = 1; k < argc; k++) {
-		if (strcmp(argv[k], "-o") == 0) {
-			FILE *ofile = fopen(argv[k + 1], "w");
-			printf("Using output file %s\n", argv[k + 1]);
-			if (ofile == NULL) {
-				return -2;
-			}
-			stdout = ofile;
-			nbopt += 2;
-		}
-	}
-	printf("Reset CPU\n");
-	int res = nano_cpu_run(64);
-	if (res >= 0) {
-		printf("PC=%08X\n", pc);
-		printf("Executed %08X instructions\n", insncnt);
-		for (int regid = 0; regid < 32; regid++) {
-			printf("%s[%d]=%08X\n", rname(regid), regid, x[regid]);
-		}
-		printf("End of program\n");
-		return 0;
-	} else {
-		printf("Program halted due to error after %d instructions\n", insncnt);
-		for (int regid = 0; regid < 32; regid++) {
-			printf("%s[%d]=%08X\n", rname(regid), regid, x[regid]);
-		}
-		return -1;
-	}
-	fclose(stdout);
+//	bool use_nano_sim = false;
+//	FILE *tmp = stdout;
+//	int nbopt = 0;
+	int res = 0;
+//	for (int k = 1; k < argc; k++) {
+//		if (strcmp(argv[k], "-o") == 0) {
+//			FILE *ofile = fopen(argv[k + 1], "w");
+//			printf("Using output file %s\n", argv[k + 1]);
+//			if (ofile == NULL) {
+//				return -2;
+//			}
+//			stdout = ofile;
+//			nbopt += 2;
+//		}
+//		if (strcmp(argv[k], "-bin") == 0) {
+//			FILE *binfile = fopen(argv[k + 1], "r");
+//			printf("Using binary file %s\n", argv[k + 1]);
+//			if (binfile == NULL) {
+//				return -2;
+//			}
+//			loadbinary(argv[k + 1]);
+//			nbopt += 2;
+//		}
+//	}
+//	printf("Reset CPU\n");
+	res = nano_cpu_run(64);
+//	if (res >= 0) {
+//		printf("PC=%08X\n", pc);
+//		printf("Executed %08X instructions\n", insncnt);
+//		for (int regid = 0; regid < 32; regid++) {
+//			printf("%s[%d]=%08X\n", rname(regid), regid, x[regid]);
+//		}
+//		printf("End of program\n");
+//		return 0;
+//	} else {
+//		printf("Program halted due to error after %d instructions\n", insncnt);
+//		fprintf(stderr,"Program halted due to error after %d instructions\n", insncnt);
+//		for (int regid = 0; regid < 32; regid++) {
+//			printf("%s[%d]=%08X\n", rname(regid), regid, x[regid]);
+//		}
+//		return -1;
+//	}
+//	fclose(stdout);
 }
 
 #define RANGE(x, ub, lb) ((x & (1 << (ub))) >> lb)
@@ -649,8 +846,6 @@ struct decode_info decode(unsigned int ir) {
 
 #ifndef __SYNTHESIS__
 
-char buffer[4096];
-
 char const *regnames[32] = { "zero", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
 		"s0/fp", "s1", "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7", "s2",
 		"s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "t3", "t4",
@@ -685,6 +880,13 @@ char* csrname(unsigned int csrid) {
 	}
 }
 
+/* create a queue to mitigate the fact that by the mnneminic function has side effc on the buffer*/
+#define QUEUE_SIZE 64
+char* buffer;
+char queue[QUEUE_SIZE][1024];
+char buffer_idx = 0;
+
+
 char* mnemonic(unsigned int ir) {
 
 	const char *rs1, *rs2, *rd, *csr;
@@ -698,6 +900,9 @@ char* mnemonic(unsigned int ir) {
 	csr = csrname(dc.rs2);
 	simm_I = dc.simm_I;
 	simm_S = dc.simm_S;
+
+	buffer=queue[buffer_idx];
+	buffer_idx = (buffer_idx +1) % 64;
 
 	switch (dc.opcode) {
 	case RISCV_LUI: {
@@ -791,6 +996,7 @@ char* mnemonic(unsigned int ir) {
 				sprintf(buffer, "wfi");
 				break;
 			}
+
 			}
 			break;
 
@@ -804,13 +1010,13 @@ char* mnemonic(unsigned int ir) {
 			sprintf(buffer, "csrrc csr[%03X],%s", dc.imm_I, rs1);
 			break;
 		case RISCV_CSRRWI:
-			sprintf(buffer, "csrrwi csr[%03X],%02X", dc.imm_I, dc.rs1);
+			sprintf(buffer, "csrrwi csr[%03X],%02X", dc.imm_I, dc.rs1.to_int());
 			break;
 		case RISCV_CSRRSI:
-			sprintf(buffer, "csrrsi csr[%03X],%02X", dc.imm_I, dc.rs1);
+			sprintf(buffer, "csrrsi csr[%03X],%02X", dc.imm_I, dc.rs1.to_int());
 			break;
 		case RISCV_CSRRCI:
-			sprintf(buffer, "csrrci csr[%03X],%02X", dc.imm_I, dc.rs1);
+			sprintf(buffer, "csrrci csr[%03X],%02X", dc.imm_I, dc.rs1.to_int());
 			break;
 
 		default:
@@ -823,7 +1029,7 @@ char* mnemonic(unsigned int ir) {
 		sprintf(buffer, "fence");
 		break;
 	default: {
-		sprintf(buffer, "UNKNOWN INSTRUCTION OPCODE=%02X", dc.opcode);
+		sprintf(buffer, "UNKNOWN INSTRUCTION OPCODE=%02X", dc.opcode.to_int());
 		break;
 	}
 	}
