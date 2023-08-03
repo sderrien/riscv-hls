@@ -24,22 +24,19 @@ int loadbinary(char *filename, unsigned int *mem) {
     while (!feof(f) && i < (MEMSIZE / 4)) {
       unsigned int v;
       fread(&v, 4, 1, f);
-      printf("%08X\n",v);
+      // printf("%08X\n",v);
       mem[i] = v;
       i++;
     }
     fclose(f);
     return i;
   } else {
-	printf("Could not open file '%s'\n", filename);
     return -1;
   }
 }
 
-unsigned int imem[MEMSIZE / 4] = {0xdeadbeef};
-
 int main(int argc, char **argv) {
-
+  unsigned int imem[MEMSIZE / 4] = {0xdeadbeef};
   if (argc == 3) {
     int i;
     printf("Loading input program file '%s'\n", argv[1]);
@@ -98,5 +95,4 @@ int main(int argc, char **argv) {
     fprintf(stderr, "Usage : genrom infile  outfile \n");
     return -1;
   }
-	return -1;
 }

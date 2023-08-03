@@ -23,8 +23,8 @@ $(BINDIR)/server-test-pipe: server-test.cpp channels.cpp channels-pipe.cpp
 $(BINDIR)/server-test-uart: server-test.cpp channels.cpp channels-uart.cpp
 	$(CXX) $(CFLAGS) -o $@ $^
 
-$(BINDIR)/gdb-server-iss : gdb-server.cpp gdb-target-iss.cpp ../riscv-core/src/riscv-iss.cpp ../riscv-core/src/asm.cpp ../riscv-core/src/rom.h
-	$(CXX) $(CFLAGS) -pthread -o  $@ gdb-server.cpp gdb-target-iss.cpp ../riscv-core/src/riscv-iss.cpp ../riscv-core/src/asm.cpp
+$(BINDIR)/gdb-server-iss : gdb-server.cpp gdb-target-iss.cpp ../riscv-core/src/riscv-iss.cpp ../riscv-core/src/asm.cpp ../riscv-core/src/rom.h ../riscv-core/src/elfreader/dynamicrom.cpp ../riscv-core/src/elfreader/elfreader.cpp
+	$(CXX) $(CFLAGS) -pthread -o $@ gdb-server.cpp gdb-target-iss.cpp ../riscv-core/src/riscv-iss.cpp ../riscv-core/src/asm.cpp ../riscv-core/src/elfreader/dynamicrom.cpp ../riscv-core/src/elfreader/elfreader.cpp
 
 $(BINDIR)/gdb-server-pipe : gdb-server.cpp channels.cpp channels-pipe.cpp gdb-target-core.cpp
 	$(CXX) $(CFLAGS) -o $@ $^

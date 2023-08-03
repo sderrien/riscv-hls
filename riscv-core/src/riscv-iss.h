@@ -13,6 +13,7 @@ uint32_t cpu_run();
 uint32_t nano_cpu_run();
 bool is_cpu_halted();
 
+void init_sp(uint32_t addr);
 uint32_t cpu_memread_u8(uint32_t addr);
 void cpu_memwrite_u8(uint32_t addr, uint8_t data);
 uint32_t cpu_memread_u32(uint32_t addr);

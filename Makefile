@@ -18,6 +18,9 @@ gdb: setup
 	$(MAKE) -C riscv-gdbserver
 	$(MAKE) -C riscv-core/src
 	
+runner: setup
+	$(MAKE) -C run-elf
+
 hls: setup
 	$(MAKE) -C riscv-core/hls 
 

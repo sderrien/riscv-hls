@@ -65,6 +65,11 @@ Compile `gdb` servers for RISCV.
 $ make gdb 
 ```
 
+Compile elf `runner` to execute programs without the gdb server.
+```console
+$ make runner
+```
+
 Compile RISCV example programs. 
 
 ```console
@@ -75,26 +80,45 @@ $ make elf
 Usage (from command line) 
 -------------------------
 
-To debug a program running on the ISS model running on the host CPU
+All of the following programs have the `-verbose` option to enable more debug messages.
+
+To debug a program running on the ISS model running on the host CPU.
+The program to run must be compiled to ELF format.
 
 ```console
-$ gdb-server-iss
-$ riscv32-unknown-elf-gdb -ex "target remote :1234" ../riscv-programs/example.elf
+$ gdb-server-iss example.elf
+$ riscv32-unknown-elf-gdb -ex "target remote :1234" example.elf
 ```
 
 To debug a program running on a behavioral model of the riscv + debug core on the host CPU
 
 ```console
 $ gdb-server-pipe
-$ riscv32-unknown-elf-gdb -ex "target remote :1234" ../riscv-programs/example.elf
+$ riscv32-unknown-elf-gdb -ex "target remote :1234" example.elf
 ```
 
 To debug a program running on the FPGA using the RISCV hardware IP synthesized from the ISS model
 
 ```console
 $ gdb-server-uart 
-$ riscv32-unknown-elf-gdb -ex "target remote :1234" ../riscv-programs/example.elf
+$ riscv32-unknown-elf-gdb -ex "target remote :1234" example.elf
 ```
+
+To run a program without the gdb server. You can pass `-verbose` and elf files as arguments.
+
+```console
+$ run-elf -verbose example1.elf example2.elf
+```
+
+Embench-iot
+-----------
+
+To clone and compile embench iotyou can use the script `compile-embench.py`.
+
+```console
+$ python ./scripts/compile-embench.py
+```
+You can now find your elf files at `embench-iot/bd/src/program_name/program_name` (replacing program_nam with wikisort for example).
 
 
 Usage (from Eclipse CDT) 

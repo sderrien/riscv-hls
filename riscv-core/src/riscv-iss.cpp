@@ -12,6 +12,7 @@
 #include "gdb-target.h"
 #include "riscv-iss.h"
 #include "rvi32.h"
+#include "elfreader/dynamicrom.h"
 
 #ifndef __SYNTHESIS__
 #include <channels.h>
@@ -356,12 +357,17 @@ void dump_trace(FILE *f, int depth) {
   }
 }
 
+void init_sp(uint32_t addr) {
+  write_reg(x, 2, addr);
+}
+
+
 bool cpu_load_insn(struct decode_info dc) {
   bool valid = false;
   uint32_t addr = (x[dc.rs1]) + (dc.simm_I);
   uint32_t waddr = addr32(addr);
-  if (trace_instr)
-    fprintf(stdout, "MEM[%d+%d=%d]", (int)(x[dc.rs1]), dc.simm_I, addr);
+  /*if (trace_instr)
+    fprintf(stdout, "MEM[%d+%d=%d]\n", (int)(x[dc.rs1]), dc.simm_I, addr);*/
 
 #if 0
 			if (is_io_access(addr)) {
@@ -377,6 +383,12 @@ bool cpu_load_insn(struct decode_info dc) {
     uint32_t data =
         pack_bytes(mem0[waddr], mem1[waddr], mem2[waddr], mem3[waddr]);
     switch (dc.funct3) {
+    case RISCV_LD_LBU :
+      valid = true;
+      break;
+    case RISCV_LD_LB :
+      valid = true;
+      break;
     case RISCV_LD_LW:
       valid = (offset % 4) == 0;
       break;
@@ -435,9 +447,9 @@ bool cpu_store_insn(struct decode_info dc) {
       next_pc = pc;
       halted = true;
     } else {
-      if (trace_instr)
-        fprintf(stdout, "MEM[%08X+%08X=%08X]", (int)(x[dc.rs1]), dc.simm_S,
-                addr);
+      /*if (trace_instr)
+        fprintf(stdout, "MEM[%08X+%08X=%08X]\n", (int)(x[dc.rs1]), dc.simm_S,
+                addr);*/
       cpu_memwrite_u32(addr, x[dc.rs2]);
     }
     break;
@@ -467,7 +479,7 @@ bool cpu_store_insn(struct decode_info dc) {
       cpu_iowrite_u8(addr, x[dc.rs2]);
       // getchar();
     } else {
-      valid = (offset % 4) == 0;
+      valid = true; //(offset % 4) == 0;
       char value = extract_byte(x[dc.rs2], 0);
       switch (offset) {
       case 0:
@@ -513,6 +525,7 @@ bool cpu_sys_insn(struct decode_info dc) {
       next_pc = csr[RISCV_CSR_MTVEC];
       csr[RISCV_CSR_MCAUSE] = EXCEPTION_ECALL_M;
       printf("syscall %d (%d,%d,%d)\n", x[17], x[10], x[11], x[12]);
+      fflush(stdout);
       if (x[17] == 93 /* SYS_EXIT */)
         halted = true;
       break;
@@ -584,7 +597,7 @@ uint32_t cpu_step() {
   unsigned char byte1 = 0;
   unsigned char byte2 = 0;
   unsigned char byte3 = 0;
-  unsigned int next_pc;
+  //unsigned int next_pc;
   unsigned int data;
   unsigned int hartid = 1;
   unsigned int waddr;
