@@ -121,5 +121,3 @@ void debug_write_insn(uint32_t addr, uint32_t value) {
 uint32_t debug_read_insn(uint32_t addr) { return cpu_memread_u32(addr); }
 
 bool debug_is_valid_addr(uint32_t addr) { return true; }
-
-int debug_add_hw_bkpt(unsigned int addr) { return add_hw_bkpt(addr); }

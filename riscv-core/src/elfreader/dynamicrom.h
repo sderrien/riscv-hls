@@ -1,0 +1,1 @@
+int loadmem(const char *pathToElfFile);

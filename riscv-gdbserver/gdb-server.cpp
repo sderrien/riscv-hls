@@ -55,6 +55,7 @@
 #include <gdb-server.h>
 #include <gdb-target.h>
 #include <riscv-iss.h>
+#include "../riscv-core/src/elfreader/dynamicrom.h"
 
 /* Define to log each packet */
 #define RSP_TRACE 0
@@ -2288,7 +2289,7 @@ static void rsp_insert_matchpoint(struct rsp_buf *buf) {
 
   case BP_HARDWARE:
     fprintf(stderr, "Hardware breakpoint not supported\n");
-    debug_add_hw_bkpt(addr);
+    //debug_add_hw_bkpt(addr);
     put_str_packet(""); /* Not supported */
     return;
 
@@ -2372,17 +2373,24 @@ void rsp_check_watch(unsigned int addr) {
 void uart_init_device(const char *device);
 
 int main(int argc, char **argv) {
+  char* target = NULL;
 
   for (int k = 1; k < argc; k++) {
     if (strcmp(argv[k], "-verbose") == 0) {
       verbose = true;
+    } else {
+      target = argv[k];
     }
   }
-  if (argc == 2) {
-    server_init_device(argv[1]);
-  } else {
-    server_init_device("/dev/ttyUSB1");
+  //if (argc == 2) {
+  //  server_init_device(argv[1]);
+  //} else {
+  //  server_init_device("/dev/ttyUSB1");
+  //}
+  if (target != NULL) {
+    set_npc(loadmem(target));
   }
+  init_sp(0xf0000);
   rsp_init();
 
   while (rsp.stalled)
