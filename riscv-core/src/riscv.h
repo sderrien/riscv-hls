@@ -204,14 +204,24 @@
 #define EXTENSION_Y 0x01000000 //	Reserved
 #define EXTENSION_Z 0x02000000 //	Reserved
 
+#define DEBUG_ISS
 
 struct decode_info {
+#ifdef DEBUG_ISS
+	unsigned char opcode;
+	unsigned char rd;
+	unsigned char funct3;
+	unsigned char rs1;
+	unsigned char rs2;
+	unsigned char funct7;
+#else
 	ac_int<7, false> opcode;
 	ac_int<5, false> rd;
 	ac_int<3, false> funct3;
 	ac_int<5, false> rs1;
 	ac_int<5, false> rs2;
 	ac_int<7, false> funct7;
+#endif
 	unsigned short imm_I;
 	unsigned short funct12;
 	short simm_I;
@@ -224,3 +234,4 @@ struct decode_info {
 	unsigned short br_uoffset;
 	short br_offset;
 };
+

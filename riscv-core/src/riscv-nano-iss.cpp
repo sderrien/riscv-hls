@@ -12,18 +12,11 @@
 #include <riscv.h>
 #include <riscv-nano-config.h>
 
-#define MEMSIZE 0x10000000
-#define IOSIZE 0x10000000
 
 #if MEMSIZE<0x0000000C
 #error binary image does not fit memory 
 #endif
 
-unsigned int memw[MEMSIZE/4]= {0};
-unsigned char mem0[MEMSIZE/4]= {0};
-unsigned char mem1[MEMSIZE/4]= {0};
-unsigned char mem2[MEMSIZE/4]= {0};
-unsigned char mem3[MEMSIZE/4]= {0};
 
 //#endif
 
@@ -57,6 +50,11 @@ void trace_io(uint32_t addr, uint32_t value) {}
 
 #endif
 
+unsigned int memw[MEMSIZE/4]= {0};
+unsigned char mem0[MEMSIZE/4]= {0};
+unsigned char mem1[MEMSIZE/4]= {0};
+unsigned char mem2[MEMSIZE/4]= {0};
+unsigned char mem3[MEMSIZE/4]= {0};
 
 uint32_t insncnt;
 uint32_t x[32] = { 0, 0, 0, 0, 0 };
@@ -84,9 +82,6 @@ uint32_t addr32(uint32_t addr) {
 uint32_t byte_offset(uint32_t addr) {
 	return (addr & 0x3);
 }
-
-
-
 
 uint32_t nano_cpu_run(int nbinsn) {
 	uint32_t ir;
@@ -361,24 +356,6 @@ uint32_t nano_cpu_run(int nbinsn) {
 }
 
 
-int loadbinary(char *filename) {
-  int i;
-  FILE *f;
-  char buffer[16];
-  f = fopen(filename, "r");
-  i = 0;
-  if (f != NULL) {
-    while (!feof(f) && i < (MEMSIZE/4)) {
-      fread(memw, 1, 4, f);
-      i += 1;
-    }
-    fclose(f);
-    return i;
-  } else {
-    fprintf(stderr, "Could not open %s\n", filename);
-    return -1;
-  }
-}
 
 int ccycles=0;
 
@@ -400,34 +377,13 @@ void dump_perf() {
 	fclose(f);
 }
 
+int parse_args(int argc, char **argv);
+
 int main(int argc, char **argv) {
 
-//	bool use_nano_sim = false;
-//	FILE *tmp = stdout;
-//	int nbopt = 0;
-	int res = 0;
-//	for (int k = 1; k < argc; k++) {
-//		if (strcmp(argv[k], "-o") == 0) {
-//			FILE *ofile = fopen(argv[k + 1], "w");
-//			printf("Using output file %s\n", argv[k + 1]);
-//			if (ofile == NULL) {
-//				return -2;
-//			}
-//			stdout = ofile;
-//			nbopt += 2;
-//		}
-//		if (strcmp(argv[k], "-bin") == 0) {
-//			FILE *binfile = fopen(argv[k + 1], "r");
-//			printf("Using binary file %s\n", argv[k + 1]);
-//			if (binfile == NULL) {
-//				return -2;
-//			}
-//			loadbinary(argv[k + 1]);
-//			nbopt += 2;
-//		}
-//	}
-//	printf("Reset CPU\n");
-	res = nano_cpu_run(128);
+	parse_args(argc, argv);
+	printf("Reset CPU\n");
+	int res = nano_cpu_run(1024);
 
 	if (res >= 0) {
 		printf("PC=%08X\n", pc);

@@ -4,7 +4,13 @@
 #include <string.h>
 #include <ac_int.h>
 #include <riscv.h>
+#include <riscv-nano-config.h>
 
+extern unsigned int memw[];
+extern unsigned char mem0[];
+extern unsigned char mem1[];
+extern unsigned char mem2[];
+extern unsigned char mem3[];
 
 #define RANGE(x, ub, lb) ((x & (1 << (ub))) >> lb)
 
@@ -81,10 +87,29 @@ char* csrname(unsigned int csrid) {
 
 /* create a queue to mitigate the fact that by the mnneminic function has side effc on the buffer*/
 #define QUEUE_SIZE 64
-char* buffer;
+char *buffer;
 char queue[QUEUE_SIZE][1024];
 char buffer_idx = 0;
 
+int loadbinary(char *filename) {
+	int i;
+	FILE *f;
+	char buffer[16];
+	f = fopen(filename, "r");
+	i = 0;
+	if (f != NULL) {
+		while (!feof(f) && i < (MEMSIZE / 4)) {
+			printf("%08X\n");
+			fread(&memw[i], 1, 4, f);
+			i += 1;
+		}
+		fclose(f);
+		return i;
+	} else {
+		fprintf(stderr, "Could not open %s\n", filename);
+		return -1;
+	}
+}
 
 char* mnemonic(unsigned int ir) {
 
@@ -100,8 +125,8 @@ char* mnemonic(unsigned int ir) {
 	simm_I = dc.simm_I;
 	simm_S = dc.simm_S;
 
-	buffer=queue[buffer_idx];
-	buffer_idx = (buffer_idx +1) % 64;
+	buffer = queue[buffer_idx];
+	buffer_idx = (buffer_idx + 1) % 64;
 
 	switch (dc.opcode) {
 	case RISCV_LUI: {
@@ -209,13 +234,25 @@ char* mnemonic(unsigned int ir) {
 			sprintf(buffer, "csrrc csr[%03X],%s", dc.imm_I, rs1);
 			break;
 		case RISCV_CSRRWI:
+#ifdef DEBUG_ISS
+			sprintf(buffer, "csrrwi csr[%03X],%02X", dc.imm_I, dc.rs1);
+#else
 			sprintf(buffer, "csrrwi csr[%03X],%02X", dc.imm_I, dc.rs1.to_int());
+#endif
 			break;
 		case RISCV_CSRRSI:
+#ifdef DEBUG_ISS
+			sprintf(buffer, "csrrsi csr[%03X],%02X", dc.imm_I, dc.rs1);
+#else
 			sprintf(buffer, "csrrsi csr[%03X],%02X", dc.imm_I, dc.rs1.to_int());
+#endif
 			break;
 		case RISCV_CSRRCI:
+#ifdef DEBUG_ISS
+			sprintf(buffer, "csrrci csr[%03X],%02X", dc.imm_I, dc.rs1);
+#else
 			sprintf(buffer, "csrrci csr[%03X],%02X", dc.imm_I, dc.rs1.to_int());
+#endif
 			break;
 
 		default:
@@ -228,10 +265,41 @@ char* mnemonic(unsigned int ir) {
 		sprintf(buffer, "fence");
 		break;
 	default: {
+#ifdef DEBUG_ISS
+		sprintf(buffer, "UNKNOWN INSTRUCTION OPCODE=%02X", dc.opcode);
+#else
 		sprintf(buffer, "UNKNOWN INSTRUCTION OPCODE=%02X", dc.opcode.to_int());
+#endif
 		break;
 	}
 	}
 	return buffer;
 }
 #endif
+
+int parse_args(int argc, char **argv) {
+	int res = 0;
+	FILE *tmp = stdout;
+	int nbopt = 0;
+
+	for (int k = 1; k < argc; k++) {
+		if (strcmp(argv[k], "-o") == 0) {
+			FILE *ofile = fopen(argv[k + 1], "w");
+			printf("Using output file %s\n", argv[k + 1]);
+			if (ofile == NULL) {
+				return -2;
+			}
+			stdout = ofile;
+			nbopt += 2;
+		}
+		if (strcmp(argv[k], "-bin") == 0) {
+			FILE *binfile = fopen(argv[k + 1], "r");
+			printf("Using binary file %s\n", argv[k + 1]);
+			if (binfile == NULL) {
+				return -2;
+			}
+			loadbinary(argv[k + 1]);
+			nbopt += 2;
+		}
+	}
+}

@@ -1,7 +1,10 @@
 //#define RISCV_PICO
 //#define RISCV_FEMTO
 //#define RISCV_PICO
+
 #define RISCV_NANO
+#define MEMSIZE 0x10000000
+#define IOSIZE 0x10000000
 
 #ifdef RISCV_FEMTO
 #define USE_BNE
