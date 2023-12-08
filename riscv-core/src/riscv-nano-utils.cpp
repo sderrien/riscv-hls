@@ -79,7 +79,7 @@ char* csrname(unsigned int csrid) {
 	case RISCV_CSR_MHARTID:
 		return (char*) "mhartid";
 	default: {
-		sprintf(csrbuffer, "csr[%d]", csrid);
+		snprintf(csrbuffer, 128,"csr[%d]", csrid);
 		return csrbuffer;
 	}
 	}
@@ -99,7 +99,6 @@ int loadbinary(char *filename) {
 	i = 0;
 	if (f != NULL) {
 		while (!feof(f) && i < (MEMSIZE / 4)) {
-			printf("%08X\n");
 			fread(&memw[i], 1, 4, f);
 			i += 1;
 		}
@@ -130,64 +129,64 @@ char* mnemonic(unsigned int ir) {
 
 	switch (dc.opcode) {
 	case RISCV_LUI: {
-		sprintf(buffer, "lui %s,%08X", rd, dc.imm_U);
+		snprintf(buffer,1024, "lui %s,%08X", rd, dc.imm_U);
 		break;
 	}
 	case RISCV_AUIPC: {
-		sprintf(buffer, "aui %s,pc+%08X", rd, dc.imm_U);
+		snprintf(buffer,1024, "aui %s,pc+%08X", rd, dc.imm_U);
 		break;
 	}
 	case RISCV_OPI: {
 
 		if (dc.funct3 == RISCV_OPI_SRI) {
 			if (dc.simm_I & 0xF00) {
-				sprintf(buffer, "srai %s,%s,%08X", rd, rs1, dc.simm_I);
+				snprintf(buffer,1024, "srai %s,%s,%08X", rd, rs1, dc.simm_I);
 			} else {
-				sprintf(buffer, "srli %s,%s,%08X", rd, rs1, dc.simm_I);
+				snprintf(buffer,1024, "srli %s,%s,%08X", rd, rs1, dc.simm_I);
 			}
 		} else {
-			sprintf(buffer, "%s %s,%s,%08X", immtypes[dc.funct3], rd, rs1,
+			snprintf(buffer,1024, "%s %s,%s,%08X", immtypes[dc.funct3], rd, rs1,
 					dc.simm_I);
 		}
 
 		break;
 	}
 	case RISCV_OP: {
-		sprintf(buffer, "%s %s,%s,%s", optypes[dc.funct3], rd, rs1, rs2);
+		snprintf(buffer,1024, "%s %s,%s,%s", optypes[dc.funct3], rd, rs1, rs2);
 		if (dc.funct3 == RISCV_OP_SR) {
 			if (dc.funct7 == RISCV_OP_SR_SRA) {
-				sprintf(buffer, "sra %s,%s,%s", rd, rs1, rs2);
+				snprintf(buffer,1024, "sra %s,%s,%s", rd, rs1, rs2);
 			} else {
-				sprintf(buffer, "srl %s,%s,%s", rd, rs1, rs2);
+				snprintf(buffer,1024, "srl %s,%s,%s", rd, rs1, rs2);
 			}
 		}
 		break;
 	}
 	case RISCV_BR: {
-		sprintf(buffer, "%s %s,%s,%08X", brtypes[dc.funct3], rs1, rs2,
+		snprintf(buffer,1024, "%s %s,%s,%08X", brtypes[dc.funct3], rs1, rs2,
 				(dc.br_offset));
 		break;
 	}
 	case RISCV_ST: {
-		sprintf(buffer, "%s %s,%s(%d:%d)", sttypes[dc.funct3], rs2, rs1,
+		snprintf(buffer,1024, "%s %s,%s(%d:%d)", sttypes[dc.funct3], rs2, rs1,
 				dc.simm_S, dc.imm_S);
 		break;
 	}
 	case RISCV_LD: {
-		sprintf(buffer, "%s %s,%s(%d:%d)", ldtypes[dc.funct3], rd, rs1,
+		snprintf(buffer,1024, "%s %s,%s(%d:%d)", ldtypes[dc.funct3], rd, rs1,
 				dc.simm_I, dc.imm_I);
 		break;
 	}
 	case RISCV_JAL: {
 		if (dc.rd == 0) {
-			sprintf(buffer, "j %d", dc.simm_J);
+			snprintf(buffer,1024, "j %d", dc.simm_J);
 		} else {
-			sprintf(buffer, "jal %s, %d", rd, dc.simm_J);
+			snprintf(buffer,1024, "jal %s, %d", rd, dc.simm_J);
 		}
 		break;
 	}
 	case RISCV_JALR: {
-		sprintf(buffer, "jalr %s,%s,%d", rd, rs1, dc.simm_J);
+		snprintf(buffer,1024, "jalr %s,%s,%d", rd, rs1, dc.simm_J);
 		break;
 	}
 	case RISCV_SYS: {
@@ -196,28 +195,28 @@ char* mnemonic(unsigned int ir) {
 		case RISCV_SYS_PRIVILEGED:
 			switch (dc.imm_I) {
 			case RISCV_SYS_ECALL: {
-				sprintf(buffer, "ecall");
+				snprintf(buffer,1024, "ecall");
 				break;
 			}
 			case RISCV_SYS_EBREAK: {
-				sprintf(buffer, "ebreak");
+				snprintf(buffer,1024, "ebreak");
 				break;
 			}
 			case RISCV_SYS_SRET: {
-				sprintf(buffer, "sret");
+				snprintf(buffer,1024, "sret");
 				break;
 			}
 			case RISCV_SYS_URET: {
-				sprintf(buffer, "uret");
+				snprintf(buffer,1024, "uret");
 				break;
 			}
 			case RISCV_SYS_MRET: {
-				sprintf(buffer, "mret");
+				snprintf(buffer,1024, "mret");
 				break;
 			}
 			case RISCV_SYS_WFI: {
 				// WFI : wait for interrupt
-				sprintf(buffer, "wfi");
+				snprintf(buffer,1024, "wfi");
 				break;
 			}
 
@@ -225,33 +224,33 @@ char* mnemonic(unsigned int ir) {
 			break;
 
 		case RISCV_CSRRW:
-			sprintf(buffer, "csrrw csr[%03X],%s", dc.imm_I, rs1);
+			snprintf(buffer,1024, "csrrw csr[%03X],%s", dc.imm_I, rs1);
 			break;
 		case RISCV_CSRRS:
-			sprintf(buffer, "csrrs csr[%03X],%s", dc.imm_I, rs1);
+			snprintf(buffer,1024, "csrrs csr[%03X],%s", dc.imm_I, rs1);
 			break;
 		case RISCV_CSRRC:
-			sprintf(buffer, "csrrc csr[%03X],%s", dc.imm_I, rs1);
+			snprintf(buffer,1024, "csrrc csr[%03X],%s", dc.imm_I, rs1);
 			break;
 		case RISCV_CSRRWI:
 #ifdef DEBUG_ISS
-			sprintf(buffer, "csrrwi csr[%03X],%02X", dc.imm_I, dc.rs1);
+			snprintf(buffer,1024, "csrrwi csr[%03X],%02X", dc.imm_I, dc.rs1);
 #else
-			sprintf(buffer, "csrrwi csr[%03X],%02X", dc.imm_I, dc.rs1.to_int());
+			snprintf(buffer,1024, "csrrwi csr[%03X],%02X", dc.imm_I, dc.rs1.to_int());
 #endif
 			break;
 		case RISCV_CSRRSI:
 #ifdef DEBUG_ISS
-			sprintf(buffer, "csrrsi csr[%03X],%02X", dc.imm_I, dc.rs1);
+			snprintf(buffer,1024, "csrrsi csr[%03X],%02X", dc.imm_I, dc.rs1);
 #else
-			sprintf(buffer, "csrrsi csr[%03X],%02X", dc.imm_I, dc.rs1.to_int());
+			snprintf(buffer,1024, "csrrsi csr[%03X],%02X", dc.imm_I, dc.rs1.to_int());
 #endif
 			break;
 		case RISCV_CSRRCI:
 #ifdef DEBUG_ISS
-			sprintf(buffer, "csrrci csr[%03X],%02X", dc.imm_I, dc.rs1);
+			snprintf(buffer,1024, "csrrci csr[%03X],%02X", dc.imm_I, dc.rs1);
 #else
-			sprintf(buffer, "csrrci csr[%03X],%02X", dc.imm_I, dc.rs1.to_int());
+			snprintf(buffer,1024, "csrrci csr[%03X],%02X", dc.imm_I, dc.rs1.to_int());
 #endif
 			break;
 
@@ -262,13 +261,13 @@ char* mnemonic(unsigned int ir) {
 		break;
 	}
 	case RISCV_MM:
-		sprintf(buffer, "fence");
+		snprintf(buffer,1024, "fence");
 		break;
 	default: {
 #ifdef DEBUG_ISS
-		sprintf(buffer, "UNKNOWN INSTRUCTION OPCODE=%02X", dc.opcode);
+		snprintf(buffer,1024, "UNKNOWN INSTRUCTION OPCODE=%02X", dc.opcode);
 #else
-		sprintf(buffer, "UNKNOWN INSTRUCTION OPCODE=%02X", dc.opcode.to_int());
+		snprintf(buffer,1024, "UNKNOWN INSTRUCTION OPCODE=%02X", dc.opcode.to_int());
 #endif
 		break;
 	}

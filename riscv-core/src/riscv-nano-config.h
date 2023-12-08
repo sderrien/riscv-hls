@@ -2,7 +2,9 @@
 //#define RISCV_FEMTO
 //#define RISCV_PICO
 
-#define RISCV_NANO
+//#define RISCV_NANO
+#define RISCV_FEMTO
+
 #define MEMSIZE 0x10000000
 #define IOSIZE 0x10000000
 
