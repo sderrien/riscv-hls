@@ -7,26 +7,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <ac_int.h>
 
 #include <riscv.h>
 #include <riscv-nano-config.h>
 
-
 #if MEMSIZE<0x0000000C
 #error binary image does not fit memory 
 #endif
-
 
 //#endif
 
 struct decode_info decode(unsigned int ir);
 char* mnemonic(unsigned int ir);
-char* rname(unsigned int ir);
-
-
-
-
 
 #ifdef __SYNTHESIS__
 
@@ -47,26 +41,192 @@ void trace_io(uint32_t addr, uint32_t value) {}
   }
 #define SPRINTF(...) sprintf(__VA_ARGS__)
 #define FPRINTF(...) fprintf(__VA_ARGS__)
-
 #endif
 
-unsigned int memw[MEMSIZE/4]= {0};
-unsigned char mem0[MEMSIZE/4]= {0};
-unsigned char mem1[MEMSIZE/4]= {0};
-unsigned char mem2[MEMSIZE/4]= {0};
-unsigned char mem3[MEMSIZE/4]= {0};
+#if MEMSIZE<0x00000070
+#error binary image does not fit memory
+#endif
+unsigned int memw[MEMSIZE/4]= {
+	0x00100093, // 00000000: addi ra,zero,00000001,
+	0x00009A63, // 00000004: bne ra,zero,00000014,
+	0x00009063, // 00000008: bne ra,zero,00000000,
+	0x00009063, // 0000000C: bne ra,zero,00000000,
+	0x00009063, // 00000010: bne ra,zero,00000000,
+	0x00009063, // 00000014: bne ra,zero,00000000,
+	0x00100093, // 00000018: addi ra,zero,00000001,
+	0x01F08113, // 0000001C: addi sp,ra,0000001F,
+	0xFFF10193, // 00000020: addi gp,sp,FFFFFFFF,
+	0x01F1C213, // 00000024: xori tp,gp,0000001F,
+	0xFE0212E3, // 00000028: bne tp,zero,FFFFFFE4,
+	0x001082B3, // 0000002C: add t0,ra,ra,
+	0x40128333, // 00000030: add t1,t0,ra,
+	0x0062C3B3, // 00000034: xor t2,t0,t1,
+	0x00300413, // 00000038: addi s0/fp,zero,00000003,
+	0xFC741AE3, // 0000003C: bne s0/fp,t2,FFFFFFD4,
+	0x06000493, // 00000040: addi s1,zero,00000060,
+	0x0004A503, // 00000044: lw a0,s1(0:0),
+	0x1FF57593, // 00000048: andi a1,a0,000001FF,
+	0x1EF00613, // 0000004C: addi a2,zero,000001EF,
+	0xFCB612E3, // 00000050: bne a2,a1,FFFFFFC4,
+	0x00009063, // 00000054: bne ra,zero,00000000,
+	0x00000000, // 00000058: UNKNOWN INSTRUCTION OPCODE=00,
+	0x00000000, // 0000005C: UNKNOWN INSTRUCTION OPCODE=00,
+	0xDEADBEEF, // 00000060: jal t4, -534,
+	0xBABEFACE, // 00000064: UNKNOWN INSTRUCTION OPCODE=4E,
+	0x1BADCAFE, // 00000068: UNKNOWN INSTRUCTION OPCODE=7E,
+	0x1BADCAFE, // 0000006C: UNKNOWN INSTRUCTION OPCODE=7E
+};
+unsigned char mem0[MEMSIZE/4]= {
+	0x93 ,
+	0x63 ,
+	0x63 ,
+	0x63 ,
+	0x63 ,
+	0x63 ,
+	0x93 ,
+	0x13 ,
+	0x93 ,
+	0x13 ,
+	0xE3 ,
+	0xB3 ,
+	0x33 ,
+	0xB3 ,
+	0x13 ,
+	0xE3 ,
+	0x93 ,
+	0x03 ,
+	0x93 ,
+	0x13 ,
+	0xE3 ,
+	0x63 ,
+	0x00 ,
+	0x00 ,
+	0xEF ,
+	0xCE ,
+	0xFE ,
+	0xFE
+};
+unsigned char mem1[MEMSIZE/4]= {
+	0x00 ,
+	0x9A ,
+	0x90 ,
+	0x90 ,
+	0x90 ,
+	0x90 ,
+	0x00 ,
+	0x81 ,
+	0x01 ,
+	0xC2 ,
+	0x12 ,
+	0x82 ,
+	0x83 ,
+	0xC3 ,
+	0x04 ,
+	0x1A ,
+	0x04 ,
+	0xA5 ,
+	0x75 ,
+	0x06 ,
+	0x12 ,
+	0x90 ,
+	0x00 ,
+	0x00 ,
+	0xBE ,
+	0xFA ,
+	0xCA ,
+	0xCA
+};
+unsigned char mem2[MEMSIZE/4]= {
+	0x10 ,
+	0x00 ,
+	0x00 ,
+	0x00 ,
+	0x00 ,
+	0x00 ,
+	0x10 ,
+	0xF0 ,
+	0xF1 ,
+	0xF1 ,
+	0x02 ,
+	0x10 ,
+	0x12 ,
+	0x62 ,
+	0x30 ,
+	0x74 ,
+	0x00 ,
+	0x04 ,
+	0xF5 ,
+	0xF0 ,
+	0xB6 ,
+	0x00 ,
+	0x00 ,
+	0x00 ,
+	0xAD ,
+	0xBE ,
+	0xAD ,
+	0xAD
+};
+unsigned char mem3[MEMSIZE/4]= {
+	0x00 ,
+	0x00 ,
+	0x00 ,
+	0x00 ,
+	0x00 ,
+	0x00 ,
+	0x00 ,
+	0x01 ,
+	0xFF ,
+	0x01 ,
+	0xFE ,
+	0x00 ,
+	0x40 ,
+	0x00 ,
+	0x00 ,
+	0xFC ,
+	0x06 ,
+	0x00 ,
+	0x1F ,
+	0x1E ,
+	0xFC ,
+	0x00 ,
+	0x00 ,
+	0x00 ,
+	0xDE ,
+	0xBA ,
+	0x1B ,
+	0x1B
+};
+
+
 
 uint32_t insncnt;
 uint32_t x[32] = { 0, 0, 0, 0, 0 };
 uint32_t pc, next_pc;
 
+
+uint32_t addr32(uint32_t addr) {
+	return (addr & (MEMSIZE - 1)) >> 2;
+}
+
+bool is_io_access(uint32_t addr) {
+  uint32_t tmp = addr & 0x80000000;
+  if (tmp != 0) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+
 #pragma GCS_INLINE
-void write_reg(uint32_t x[32], ac_int<5,false> rd, int value) {
-	if (rd != 0 && rd <= 31) {
-		x[rd] = value;
+void write_reg(uint32_t x[32], ac_int<5, false> rd, int value) {
+
+	if (rd != 0) {
+		x[((unsigned char) rd)] = value;
 	}
 }
 
+#pragma GCS_INLINE
 void cpu_branch_insn(struct decode_info dc, bool taken) {
 	if (taken) {
 		// printf("pc = %08X + %08X\n",pc,dc.br_offset);
@@ -74,13 +234,161 @@ void cpu_branch_insn(struct decode_info dc, bool taken) {
 	}
 }
 
-uint32_t addr32(uint32_t addr) {
-	return (addr & (MEMSIZE-1)) >> 2;
+
+uint32_t byte_offset(uint32_t addr) {
+	return (addr & 0x3);
+}
+
+char extract_byte(uint32_t data, uint32_t offset) {
+	char res =0 ;
+
+	switch (offset) {
+	case 0:
+		res =((char) (data)); break;
+	case 1:
+		res =((char) (data >> 8) & 0xFF);break;
+	case 2:
+		res =((char) (data >> 16) & 0xFF);break;
+	default:
+		res =((char) (data >> 24));break;
+	}
+	return res;
+}
+
+uint32_t pack_bytes(unsigned char a, unsigned char b, unsigned char c,
+		unsigned char d) {
+	return (a | (b << 8) | (c << 16) | (d << 24));
+}
+
+short extract_half(uint32_t data, uint32_t offset) {
+	short res ;
+	switch (offset) {
+	case 0:
+		res = ((short) (data)); break;
+	default:
+		res = ((short) (data >> 16)); break;
+	}
+	return res;
 }
 
 #pragma GCS_INLINE
-uint32_t byte_offset(uint32_t addr) {
-	return (addr & 0x3);
+bool cpu_load_insn(struct decode_info dc) {
+	bool valid = false;
+
+	uint32_t addr ;
+	uint32_t waddr ;
+	uint8_t offset ;
+	uint32_t data ;
+
+	addr = (x[dc.rs1]) + (dc.simm_I);
+	waddr = addr32(addr);
+	offset = byte_offset(addr);
+	data = pack_bytes(mem0[waddr],mem1[waddr],mem2[waddr],mem3[waddr]);
+
+	switch (dc.funct3) {
+	case RISCV_LD_LW:
+		valid = (offset % 4) == 0;
+		break;
+	case RISCV_LD_LH:
+		valid = (offset % 2) == 0;
+		break;
+	case RISCV_LD_LHU:
+		valid = (offset % 2) == 0;
+		break;
+	}
+
+	switch (dc.funct3) {
+	case RISCV_LD_LB:
+		data = (int8_t) extract_byte(data, offset);
+		break;
+	case RISCV_LD_LBU:
+		data = extract_byte(data, offset);
+		break;
+	case RISCV_LD_LW:
+		data = data ;//cpu_memread_u32(addr);
+		break;
+	case RISCV_LD_LH:
+		data = (int16_t) extract_half(data, offset);
+		break;
+	case RISCV_LD_LHU:
+		data = extract_half(data, offset);
+		break;
+	}
+	write_reg(x, dc.rd, data);
+
+	return valid;
+}
+
+#pragma GCS_INLINE
+bool cpu_store_insn(struct decode_info dc) {
+	bool valid = false;
+	uint32_t addr ;
+	uint32_t waddr;
+	uint32_t offset ;
+	char value ;
+
+	addr = ((int) x[dc.rs1]) + (dc.simm_S);
+	waddr = addr32(addr);
+	offset = byte_offset(addr);
+
+	switch (dc.funct3) {
+	case RISCV_ST_SW: {
+		valid = (offset & 3) == 0;
+		if (valid) {
+		    mem0[addr32(addr)] = extract_byte(x[dc.rs2], 0);
+		    mem1[addr32(addr)] = extract_byte(x[dc.rs2], 1);
+		    mem2[addr32(addr)] = extract_byte(x[dc.rs2], 2);
+		    mem3[addr32(addr)] = extract_byte(x[dc.rs2], 3);
+		}
+		break;
+	}
+	case RISCV_ST_SH: {
+		valid = (offset & 1) == 0;
+		if (valid) {
+			switch (offset) {
+			case 0: {
+				mem0[waddr] = extract_byte(x[dc.rs2], 0);
+				mem1[waddr] = extract_byte(x[dc.rs2], 1);
+				break;
+			}
+			case 2:
+				mem2[waddr] = extract_byte(x[dc.rs2], 0);
+				mem3[waddr] = extract_byte(x[dc.rs2], 1);
+				break;
+			}
+		}
+		break;
+	}
+	case RISCV_ST_SB: {
+		valid = true;
+		value = extract_byte(x[dc.rs2], 0);
+		if (is_io_access(waddr)) {
+			printf("%c",value);
+		} else {
+			switch (offset) {
+			case 0:
+				mem0[waddr] = value;
+				break;
+			case 1:
+				mem1[waddr] = value;
+				break;
+			case 2:
+				mem2[waddr] = value;
+				break;
+			case 3:
+				mem3[waddr] = value;
+				break;
+			}
+		}
+
+		break;
+	}
+	default:
+		valid = false;
+		break;
+	}
+
+	return valid;
 }
 
 uint32_t nano_cpu_run(int nbinsn) {
@@ -115,75 +423,75 @@ uint32_t nano_cpu_run(int nbinsn) {
 		next_pc = pc + 4;
 		switch (dc.opcode) {
 #ifdef USE_LUI
-			case RISCV_LUI:
-			  write_reg(x, dc.rd, dc.imm_U);
-			  valid = true;
-			  break;
+		case RISCV_LUI:
+			write_reg(x, dc.rd, dc.imm_U);
+			valid = true;
+			break;
 #endif
 #ifdef USE_AUIPC
-			case RISCV_AUIPC:
-			  write_reg(x, dc.rd, pc + dc.imm_U);
-			  valid = true;
-			  break;
+		case RISCV_AUIPC:
+			write_reg(x, dc.rd, pc + dc.imm_U);
+			valid = true;
+			break;
 #endif
 
 		case RISCV_OPI: {
 			switch (dc.funct3) {
-				#ifdef USE_ADDI
-				case RISCV_OPI_ADDI:
-					write_reg(x, dc.rd, x[dc.rs1] + dc.simm_I);
+#ifdef USE_ADDI
+			case RISCV_OPI_ADDI:
+				write_reg(x, dc.rd, x[dc.rs1] + dc.simm_I);
+				valid = true;
+				break;
+#endif
+#ifdef USE_ANDI
+			case RISCV_OPI_ANDI:
+				write_reg(x, dc.rd, x[dc.rs1] & dc.simm_I);
+				valid = true;
+				break;
+#endif
+#ifdef USE_ORI
+			case RISCV_OPI_ORI:
+				write_reg(x, dc.rd, x[dc.rs1] | dc.simm_I);
+				valid = true;
+				break;
+#endif
+#ifdef USE_XORI
+			case RISCV_OPI_XORI:
+				write_reg(x, dc.rd, x[dc.rs1] ^ dc.simm_I);
+				valid = true;
+				break;
+#endif
+#ifdef USE_SLTI
+			case RISCV_OPI_SLTI:
+				write_reg(x, dc.rd, ((int) x[dc.rs1] < dc.simm_I) ? 1 : 0);
+				valid = true;
+				break;
+#endif
+#ifdef USE_SLTIU
+			case RISCV_OPI_SLTIU:
+				write_reg(x, dc.rd, (x[dc.rs1] < dc.simm_I) ? 1 : 0);
+				valid = true;
+				break;
+#endif
+#ifdef USE_SRI
+			case RISCV_OPI_SRI:
+				if (dc.funct7 == RISCV_OPI_SRI_SRAI) {
+					write_reg(x, dc.rd, (((int) x[dc.rs1]) >> dc.shamt));
 					valid = true;
-					break;
-				#endif
-				#ifdef USE_ANDI
-				case RISCV_OPI_ANDI:
-					write_reg(x, dc.rd, x[dc.rs1] & dc.simm_I);
+				} else if (dc.funct7 == RISCV_OPI_SRI_SRLI) {
+					write_reg(x, dc.rd, (x[dc.rs1] >> dc.shamt));
 					valid = true;
-					break;
-				#endif
-				#ifdef USE_ORI
-				case RISCV_OPI_ORI:
-					write_reg(x, dc.rd, x[dc.rs1] | dc.simm_I);
-					valid = true;
-					break;
-				#endif
-				#ifdef USE_XORI
-				case RISCV_OPI_XORI:
-					write_reg(x, dc.rd, x[dc.rs1] ^ dc.simm_I);
-					valid = true;
-					break;
-				#endif
-				#ifdef USE_SLTI
-				case RISCV_OPI_SLTI:
-					write_reg(x, dc.rd, ((int)x[dc.rs1] < dc.simm_I) ? 1 : 0);
-					valid = true;
-					break;
-				#endif
-				#ifdef USE_SLTIU
-				case RISCV_OPI_SLTIU:
-					write_reg(x, dc.rd, (x[dc.rs1] < dc.simm_I) ? 1 : 0);
-					valid = true;
-					break;
-				#endif
-				#ifdef USE_SRI
-				case RISCV_OPI_SRI:
-					if (dc.funct7 == RISCV_OPI_SRI_SRAI) {
-						write_reg(x, dc.rd, (((int)x[dc.rs1]) >> dc.shamt));
-						valid = true;
-					} else if (dc.funct7 == RISCV_OPI_SRI_SRLI) {
-						write_reg(x, dc.rd, (x[dc.rs1] >> dc.shamt));
-						valid = true;
-					}
-					break;
-				#endif
-				#ifdef USE_SLLI
-				case RISCV_OPI_SLLI:
-					write_reg(x, dc.rd, (x[dc.rs1] << (dc.shamt)));
-					valid = true;
-					break;
-				#endif
-				default:
-					break;
+				}
+				break;
+#endif
+#ifdef USE_SLLI
+			case RISCV_OPI_SLLI:
+				write_reg(x, dc.rd, (x[dc.rs1] << (dc.shamt)));
+				valid = true;
+				break;
+#endif
+			default:
+				break;
 			}
 			break;
 		}
@@ -192,112 +500,117 @@ uint32_t nano_cpu_run(int nbinsn) {
 			switch (dc.funct3) {
 			case RISCV_OP_ADD: {
 				switch (dc.funct7) {
-				#ifdef USE_ADD
+#ifdef USE_ADD
 				case RISCV_OP_ADD_ADD:
 					write_reg(x, dc.rd, x[dc.rs1] + x[dc.rs2]);
 					valid = true;
 					break;
-				#endif
-				#ifdef USE_SUB
+#endif
+#ifdef USE_SUB
 				case RISCV_OP_ADD_SUB:
 					write_reg(x, dc.rd, x[dc.rs1] - x[dc.rs2]);
 					valid = true;
 					break;
-				#endif
-				default:{
+#endif
+				default: {
 
 				}
 				}
 				break;
 			}
-			#ifdef USE_AND
+#ifdef USE_AND
 			case RISCV_OP_AND:
 				write_reg(x, dc.rd, x[dc.rs1] & x[dc.rs2]);
-				valid = true; break;
-			#endif
-			#ifdef USE_OR
+				valid = true;
+				break;
+#endif
+#ifdef USE_OR
 			case RISCV_OP_OR:
 				write_reg(x, dc.rd, x[dc.rs1] | x[dc.rs2]);
-				valid = true; break;
-			#endif
-			#ifdef USE_XOR
+				valid = true;
+				break;
+#endif
+#ifdef USE_XOR
 			case RISCV_OP_XOR:
 				write_reg(x, dc.rd, x[dc.rs1] ^ x[dc.rs2]);
-				valid = true; break;
-			#endif
-			#ifdef USE_SLT
+				valid = true;
+				break;
+#endif
+#ifdef USE_SLT
 			case RISCV_OP_SLT:
 				write_reg(x, dc.rd, (int32_t)x[dc.rs1] < (int32_t)x[dc.rs2] ? 1 : 0);
 				valid = true; break;
 			#endif
-			#ifdef USE_SLTU
+#ifdef USE_SLTU
 			case RISCV_OP_SLTU:
 				write_reg(x, dc.rd, x[dc.rs1] < x[dc.rs2] ? 1 : 0);
 				valid = true; break;
 			#endif
-			#ifdef USE_SLL
+#ifdef USE_SLL
 			case RISCV_OP_SLL:
 				write_reg(x, dc.rd, x[dc.rs1] << x[dc.rs2]);
 				valid = true; break;
 			#endif
 			case RISCV_OP_SR: {
 				switch (dc.funct7) {
-				#ifdef USE_SRA
+#ifdef USE_SRA
 				case RISCV_OP_SR_SRA:
 					write_reg(x, dc.rd, (int32_t)x[dc.rs1] >> x[dc.rs2]);
 					valid = true; break;
 				#endif
-				#ifdef USE_SRL
+#ifdef USE_SRL
 				case RISCV_OP_SR_SRL:
 					write_reg(x, dc.rd, x[dc.rs1] >> x[dc.rs2]);
 					valid = true; break;
 				#endif
-				default: break;
+				default:
+					break;
 				}
 				break;
 			}
-		}
-		break;
+			}
+			break;
 		}
 		case RISCV_BR: {
 			switch (dc.funct3) {
-			#ifdef USE_BEQ
+#ifdef USE_BEQ
 			case RISCV_BR_BEQ:
 				cpu_branch_insn(dc, x[dc.rs1] == x[dc.rs2]);
 				valid = true;
 				break;
-			#endif
-			#ifdef USE_BLT
+#endif
+#ifdef USE_BLT
 			case RISCV_BR_BLT:
 				cpu_branch_insn(dc, x[dc.rs1] < x[dc.rs2]);
 				valid = true;
 				break;
-			#endif
-			#ifdef USE_BGE
+#endif
+#ifdef USE_BGE
 			case RISCV_BR_BGE:
 				cpu_branch_insn(dc, x[dc.rs1] >= x[dc.rs2]);
 				valid = true;
 				break;
-			#endif
-			#ifdef USE_BNE
+#endif
+#ifdef USE_BNE
 			case RISCV_BR_BNE:
 				cpu_branch_insn(dc, x[dc.rs1] != x[dc.rs2]);
 				valid = true;
 				break;
-			#endif
-			default : break;
+#endif
+			default:
+				break;
 			}
 			break;
 		}
-		#ifdef USE_JAL
+#ifdef USE_JAL
 		case RISCV_JAL: {
 			valid = true;
 			write_reg(x, dc.rd, next_pc);
 			next_pc = pc + dc.simm_J;
 			break;
 		}
-		#endif
-		#ifdef USE_JALR
+#endif
+#ifdef USE_JALR
 		case RISCV_JALR: {
 			uint32_t rs1_value = x[dc.rs1]; /* Handle the case where rs1 == rd */
 			valid = true;
@@ -305,39 +618,50 @@ uint32_t nano_cpu_run(int nbinsn) {
 			next_pc = rs1_value + dc.simm_I;
 			break;
 		}
-		#endif
-		#ifdef USE_ST
+#endif
+
+
+#ifdef USE_ST
 		case RISCV_ST: {
-			switch (dc.funct3) {
-			case RISCV_ST_SW:
-				addr = ((int) x[dc.rs1]) + (dc.simm_S);
-				offset = byte_offset(addr);
-				valid = (offset % 4) == 0;
-				memw[addr32(addr)] = x[dc.rs2];
-				break;
-			}
+#ifdef BYTE_MEM
+			valid= cpu_store_insn(dc);
+#else
+		switch (dc.funct3) {
+		case RISCV_ST_SW:
+			addr = ((int) x[dc.rs1]) + (dc.simm_S);
+			offset = byte_offset(addr);
+			valid = (offset % 4) == 0;
+			memw[addr32(addr)] = x[dc.rs2];
 			break;
 		}
-		#endif
-		#ifdef USE_LD
-		case RISCV_LD:
-			switch (dc.funct3) {
-			case RISCV_LD_LW:
-				addr = ((int) x[dc.rs1]) + (int) (dc.simm_I);
-				offset = byte_offset(addr);
-				valid = (offset % 4) == 0;
-				write_reg(x, dc.rd, memw[addr32(addr)]);
-				break;
-			}
+#endif
 			break;
-		#endif
+		}
+#endif
+#ifdef USE_LD
+		case RISCV_LD: {
+#ifdef BYTE_MEM
+			valid= cpu_load_insn(dc);
+#else
+		switch (dc.funct3) {
+		case RISCV_LD_LW:
+			addr = ((int) x[dc.rs1]) + (int) (dc.simm_I);
+			offset = byte_offset(addr);
+			valid = (offset % 4) == 0;
+			write_reg(x, dc.rd, memw[addr32(addr)]);
+			break;
+		}
+#endif
+			break;
+		}
+#endif
 		default:
 			halted = true;
 		}
 
 		if (valid) {
 			printf("PC=%08X:[%08X] %-21s \n", pc, ir, mnemonic(ir));
-			insncnt=insncnt+1;
+			insncnt = insncnt + 1;
 			pc = next_pc;
 			if ((pc & 0x3)) {
 				printf("Unaligned insn address at PC=%08X\n", pc);
@@ -355,9 +679,7 @@ uint32_t nano_cpu_run(int nbinsn) {
 		return pc;
 }
 
-
-
-int ccycles=0;
+int ccycles = 0;
 
 int get_ticks() {
 	return ccycles;
@@ -368,40 +690,12 @@ int get_trip_count() {
 }
 
 void dump_perf() {
-	int i, t ;
-	FILE* f ;
-	f = fopen("perf.txt","w");
-	i= get_trip_count();
-	t= get_ticks();
-	fprintf(f,"trip count=%d\nclock cycles=%d\nCPI=%f",i,t,t/((float)i));
+	int i, t;
+	FILE *f;
+	f = fopen("perf.txt", "w");
+	i = get_trip_count();
+	t = get_ticks();
+	fprintf(f, "trip count=%d\nclock cycles=%d\nCPI=%f", i, t, t / ((float) i));
 	fclose(f);
 }
-
-int parse_args(int argc, char **argv);
-
-int main(int argc, char **argv) {
-
-	parse_args(argc, argv);
-	printf("Reset CPU\n");
-	int res = nano_cpu_run(1024);
-
-	if (res >= 0) {
-		printf("PC=%08X\n", pc);
-		printf("Executed %08X instructions\n", insncnt);
-		for (int regid = 0; regid < 32; regid++) {
-			printf("%s[%d]=%08X\n", rname(regid), regid, x[regid]);
-		}
-		printf("End of program\n");
-		return 0;
-	} else {
-		printf("Program halted due to error after %d instructions\n", insncnt);
-		fprintf(stderr,"Program halted due to error after %d instructions\n", insncnt);
-		for (int regid = 0; regid < 32; regid++) {
-			printf("%s[%d]=%08X\n", rname(regid), regid, x[regid]);
-		}
-		return -1;
-	}
-//	fclose(stdout);
-}
-
 

@@ -1,12 +1,27 @@
-//#define RISCV_PICO
+#ifndef RISCV_CONFIG_H
+#define RISCV_CONFIG_H
 //#define RISCV_FEMTO
+
+//#define TARGET_ISA "RISCV_FEMTO"
+//#define RISCV_FEMTO
+//
 //#define RISCV_PICO
+//#define TARGET_ISA "RISCV_PICO"
 
 //#define RISCV_NANO
-#define RISCV_FEMTO
+//#define TARGET_ISA "RISCV_NANO"
 
-#define MEMSIZE 0x10000000
-#define IOSIZE 0x10000000
+#define RISCV_I32
+#define TARGET_ISA "RISCV_I32"
+
+
+#ifndef TARGET_ISA
+#error
+#define RISCV_FEMTO
+#endif
+
+#define MEMSIZE 0x100000
+#define IOSIZE 0x100000
 
 #ifdef RISCV_FEMTO
 #define USE_BNE
@@ -95,4 +110,5 @@
 
 #define USE_LUI
 #define USE_AUIPC
+#endif
 #endif

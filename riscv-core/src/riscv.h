@@ -228,7 +228,11 @@ struct decode_info {
 	unsigned short imm_S;
 	short simm_S;
 	unsigned int imm_U;
+#ifdef DEBUG_ISS
+	unsigned char shamt;
+#else
 	ac_int<5, false> shamt;
+#endif
 	unsigned int imm_J;
 	int simm_J;
 	unsigned short br_uoffset;
