@@ -13,7 +13,7 @@
 
 #define RISCV_I32
 #define TARGET_ISA "RISCV_I32"
-
+#define BYTE_MEM
 
 #ifndef TARGET_ISA
 #error
@@ -96,7 +96,10 @@
 
 #define USE_SLTI
 #define USE_SLTIU
+#define USE_SLT
+#define USE_SLTU
 #define USE_SLLI
+#define USE_SLL
 #define USE_SRI
 #define USE_SRA
 #define USE_SRL
@@ -110,5 +113,7 @@
 
 #define USE_LUI
 #define USE_AUIPC
+
+#define USE_SYS
 #endif
 #endif

@@ -186,7 +186,7 @@ char* mnemonic(unsigned int ir) {
 		break;
 	}
 	case RISCV_JALR: {
-		snprintf(buffer,1024, "jalr %s,%s,%d", rd, rs1, dc.simm_J);
+		snprintf(buffer,1024, "jalr %s,%s,%d", rd, rs1, dc.simm_I);
 		break;
 	}
 	case RISCV_SYS: {

@@ -15,7 +15,7 @@ $(BINDIR)riscv-sim:  asm.cpp riscv-iss.cpp riscv-sim.cpp
 	$(CXX) $(CFLAGS) -I../../riscv-gdbserver/ -I./ -o $@ $^
 
 
-$(BINDIR)riscv-iss:  main-elf-rvi32.cpp riscv-nano-utils.cpp riscv-nano-iss.cpp 
+$(BINDIR)riscv-iss:  main-elf-rvi32.cpp riscv-nano-utils.cpp riscv-nano-iss.cpp elf-loader.cpp
 	$(CXX) $(CFLAGS) -Wno-parentheses -Wno-shift-negative-value -fsanitize=address  -I./ -o $@ $^
 
 
