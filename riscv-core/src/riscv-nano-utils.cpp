@@ -301,4 +301,6 @@ int parse_args(int argc, char **argv) {
 			nbopt += 2;
 		}
 	}
+
+	return 0;
 }
