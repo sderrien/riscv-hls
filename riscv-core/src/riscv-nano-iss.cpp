@@ -261,7 +261,7 @@ uint32_t nano_cpu_run(uint32_t init_pc) {
 	uint32_t offset;
 	uint32_t cpt = 0;
 	bool taken;
-	bool exit = false;
+	bool end = false;
 
 	pc = init_pc;
 
@@ -532,7 +532,7 @@ uint32_t nano_cpu_run(uint32_t init_pc) {
 					if (x[17] == 93 /* SYS_EXIT */) {
 						printf("Exit code = %d\n", x[10]);
 						valid = true;
-						exit = true;
+						end = true;
 					}
 					break;
 				}
@@ -563,7 +563,7 @@ uint32_t nano_cpu_run(uint32_t init_pc) {
 					mnemonic(ir));
 			halted = true;
 		}
-	} while (!halted && !exit);
+	} while (!halted && !end);
 	if (halted) {
 		return -1;
 	} else
