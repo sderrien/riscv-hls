@@ -169,8 +169,6 @@ bool cpu_load_insn(struct decode_info dc) {
 	}
 	write_reg(x, dc.rd, data);
 
-	printf("Loading 0x%08x from 0x%08x\n", data, addr);
-
 	return valid;
 }
 
