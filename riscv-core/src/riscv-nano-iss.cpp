@@ -123,113 +123,113 @@ unsigned short extract_half(uint32_t data, uint32_t offset) {
 
 #pragma GCS_INLINE
 bool cpu_load_insn(struct decode_info dc) {
-	bool valid = false;
+	bool cpu_load_insn_valid = false;
 
-	uint32_t addr;
-	uint32_t waddr;
-	uint8_t offset;
-	uint32_t data;
+	uint32_t cpu_load_insn_addr;
+	uint32_t cpu_load_insn_waddr;
+	uint8_t cpu_load_insn_offset;
+	uint32_t cpu_load_insn_data;
 
-	addr = (x[dc.rs1]) + (dc.simm_I);
-	waddr = addr32(addr);
-	offset = byte_offset(addr);
-	data = pack_bytes(mem0[waddr], mem1[waddr], mem2[waddr], mem3[waddr]);
+	cpu_load_insn_addr = (x[dc.rs1]) + (dc.simm_I);
+	cpu_load_insn_waddr = addr32(cpu_load_insn_addr);
+	cpu_load_insn_offset = byte_offset(cpu_load_insn_addr);
+	cpu_load_insn_data = pack_bytes(mem0[cpu_load_insn_waddr], mem1[cpu_load_insn_waddr], mem2[cpu_load_insn_waddr], mem3[cpu_load_insn_waddr]);
 
 	switch (dc.funct3) {
 	case RISCV_LD_LW:
-		valid = (offset % 4) == 0;
+		cpu_load_insn_valid = (cpu_load_insn_offset % 4) == 0;
 		break;
 	case RISCV_LD_LH:
-		valid = (offset % 2) == 0;
+		cpu_load_insn_valid = (cpu_load_insn_offset % 2) == 0;
 		break;
 	case RISCV_LD_LHU:
-		valid = (offset % 2) == 0;
+		cpu_load_insn_valid = (cpu_load_insn_offset % 2) == 0;
 		break;
 	default:
-		valid = true;
+		cpu_load_insn_valid = true;
 		break;
 	}
 
 	switch (dc.funct3) {
 	case RISCV_LD_LB:
-		data = (int8_t) extract_byte(data, offset);
+		cpu_load_insn_data = (int8_t) extract_byte(cpu_load_insn_data, cpu_load_insn_offset);
 		break;
 	case RISCV_LD_LBU:
-		data = extract_byte(data, offset);
+		cpu_load_insn_data = extract_byte(cpu_load_insn_data, cpu_load_insn_offset);
 		break;
 	case RISCV_LD_LW:
-		data = data; //cpu_memread_u32(addr);
+		cpu_load_insn_data = cpu_load_insn_data; //cpu_memread_u32(addr);
 		break;
 	case RISCV_LD_LH:
-		data = (int16_t) extract_half(data, offset);
+		cpu_load_insn_data = (int16_t) extract_half(cpu_load_insn_data, cpu_load_insn_offset);
 		break;
 	case RISCV_LD_LHU:
-		data = extract_half(data, offset);
+		cpu_load_insn_data = extract_half(cpu_load_insn_data, cpu_load_insn_offset);
 		break;
 	}
-	write_reg(x, dc.rd, data);
+	write_reg(x, dc.rd, cpu_load_insn_data);
 
-	return valid;
+	return cpu_load_insn_valid;
 }
 
 #pragma GCS_INLINE
 bool cpu_store_insn(struct decode_info dc) {
-	bool valid = false;
-	uint32_t addr;
-	uint32_t waddr;
-	uint32_t offset;
-	char value;
+	bool cpu_store_insn_valid = false;
+	uint32_t cpu_store_insn_addr;
+	uint32_t cpu_store_insn_waddr;
+	uint32_t cpu_store_insn_offset;
+	char cpu_store_insn_value;
 
-	addr = ((int) x[dc.rs1]) + (dc.simm_S);
-	waddr = addr32(addr);
-	offset = byte_offset(addr);
+	cpu_store_insn_addr = ((int) x[dc.rs1]) + (dc.simm_S);
+	cpu_store_insn_waddr = addr32(cpu_store_insn_addr);
+	cpu_store_insn_offset = byte_offset(cpu_store_insn_addr);
 
 	switch (dc.funct3) {
 	case RISCV_ST_SW: {
-		valid = (offset & 3) == 0;
-		if (valid) {
-			mem0[waddr] = extract_byte(x[dc.rs2], 0);
-			mem1[waddr] = extract_byte(x[dc.rs2], 1);
-			mem2[waddr] = extract_byte(x[dc.rs2], 2);
-			mem3[waddr] = extract_byte(x[dc.rs2], 3);
+		cpu_store_insn_valid = (cpu_store_insn_offset & 3) == 0;
+		if (cpu_store_insn_valid) {
+			mem0[cpu_store_insn_waddr] = extract_byte(x[dc.rs2], 0);
+			mem1[cpu_store_insn_waddr] = extract_byte(x[dc.rs2], 1);
+			mem2[cpu_store_insn_waddr] = extract_byte(x[dc.rs2], 2);
+			mem3[cpu_store_insn_waddr] = extract_byte(x[dc.rs2], 3);
 		}
 		break;
 	}
 	case RISCV_ST_SH: {
-		valid = (offset & 1) == 0;
-		if (valid) {
-			switch (offset) {
+		cpu_store_insn_valid = (cpu_store_insn_offset & 1) == 0;
+		if (cpu_store_insn_valid) {
+			switch (cpu_store_insn_offset) {
 			case 0: {
-				mem0[waddr] = extract_byte(x[dc.rs2], 0);
-				mem1[waddr] = extract_byte(x[dc.rs2], 1);
+				mem0[cpu_store_insn_waddr] = extract_byte(x[dc.rs2], 0);
+				mem1[cpu_store_insn_waddr] = extract_byte(x[dc.rs2], 1);
 				break;
 			}
 			case 2:
-				mem2[waddr] = extract_byte(x[dc.rs2], 0);
-				mem3[waddr] = extract_byte(x[dc.rs2], 1);
+				mem2[cpu_store_insn_waddr] = extract_byte(x[dc.rs2], 0);
+				mem3[cpu_store_insn_waddr] = extract_byte(x[dc.rs2], 1);
 				break;
 			}
 		}
 		break;
 	}
 	case RISCV_ST_SB: {
-		valid = true;
-		value = extract_byte(x[dc.rs2], 0);
-		if (is_io_access(waddr)) {
-			printf("%c", value);
+		cpu_store_insn_valid = true;
+		cpu_store_insn_value = extract_byte(x[dc.rs2], 0);
+		if (is_io_access(cpu_store_insn_waddr)) {
+			printf("%c", cpu_store_insn_value);
 		} else {
-			switch (offset) {
+			switch (cpu_store_insn_offset) {
 			case 0:
-				mem0[waddr] = value;
+				mem0[cpu_store_insn_waddr] = cpu_store_insn_value;
 				break;
 			case 1:
-				mem1[waddr] = value;
+				mem1[cpu_store_insn_waddr] = cpu_store_insn_value;
 				break;
 			case 2:
-				mem2[waddr] = value;
+				mem2[cpu_store_insn_waddr] = cpu_store_insn_value;
 				break;
 			case 3:
-				mem3[waddr] = value;
+				mem3[cpu_store_insn_waddr] = cpu_store_insn_value;
 				break;
 			}
 		}
@@ -237,11 +237,11 @@ bool cpu_store_insn(struct decode_info dc) {
 		break;
 	}
 	default:
-		valid = false;
+		cpu_store_insn_valid = false;
 		break;
 	}
 
-	return valid;
+	return cpu_store_insn_valid;
 }
 
 uint32_t nano_cpu_run(uint32_t init_pc) {
