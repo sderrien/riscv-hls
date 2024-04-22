@@ -14,7 +14,10 @@
 #include <riscv-nano-config.h>
 
 struct decode_info decode(unsigned int ir);
+
+#ifndef __SYNTHESIS__
 char* mnemonic(unsigned int ir);
+#endif
 
 #ifdef __SYNTHESIS__
 
@@ -528,7 +531,9 @@ uint32_t nano_cpu_run(uint32_t init_pc) {
 				switch(dc.imm_I) {
 				case RISCV_SYS_ECALL: {
 					if (x[17] == 93 /* SYS_EXIT */) {
+#ifndef __SYNTHESIS__
 						printf("Exit code = %d\n", x[10]);
+#endif
 						valid = true;
 						end = true;
 					}
@@ -549,16 +554,22 @@ uint32_t nano_cpu_run(uint32_t init_pc) {
 		}
 
 		if (valid) {
+#ifndef __SYNTHESIS__
 			printf("PC=%08X:[%08X] %-21s \n", pc, ir, mnemonic(ir));
+#endif
 			insncnt = insncnt + 1;
 			pc = next_pc;
 			if ((pc & 0x3)) {
+#ifndef __SYNTHESIS__
 				printf("Unaligned insn address at PC=%08X\n", pc);
+#endif
 				halted = true;
 			}
 		} else {
+#ifndef __SYNTHESIS__
 			printf("UNSUPPORTED INSTRUCTION PC=%08X:[%08X] %-21s \n", pc, ir,
 					mnemonic(ir));
+#endif
 			halted = true;
 		}
 	} while (!halted && !end);
