@@ -155,7 +155,7 @@ bool elf32_load(const char *filename, uint32_t *memw, uint8_t *mem0,
 	void *data = 0;
 	FILE *file = fopen(filename, "rb");
 	if (!file) {
-		fprintf(stderr, "Failed to open file: %s\n", filename, strerror(errno));
+		fprintf(stderr, "Failed to open file: %s\n", strerror(errno));
 		return false;
 	}
 
@@ -164,8 +164,7 @@ bool elf32_load(const char *filename, uint32_t *memw, uint8_t *mem0,
 		file_size = ftell(file);
 
 	if (file_size == -1) {
-		fprintf(stderr, "Failed to get ELF file size: %s\n", filename,
-				strerror(errno));
+		fprintf(stderr, "Failed to get ELF file size: %s\n", strerror(errno));
 		fclose(file);
 		return false;
 	}
