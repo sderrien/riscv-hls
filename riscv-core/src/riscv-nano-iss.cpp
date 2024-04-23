@@ -49,9 +49,9 @@ unsigned char mem1[MEMSIZE / 4] = { 0 };
 unsigned char mem2[MEMSIZE / 4] = { 0 };
 unsigned char mem3[MEMSIZE / 4] = { 0 };
 
-uint32_t insncnt;
+uint32_t insncnt = 0;
 uint32_t x[32] = { 0, 0, 0, 0, 0 };
-uint32_t pc, next_pc;
+uint32_t pc = 0, next_pc = 0;
 
 uint32_t addr32(uint32_t addr) {
 	return (addr & (MEMSIZE - 1)) >> 2;
