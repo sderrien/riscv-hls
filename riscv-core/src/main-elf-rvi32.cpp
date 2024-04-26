@@ -41,20 +41,24 @@ int main(int argc, char **argv) {
 	int res = nano_cpu_run(init_pc);
 
 	if (res >= 0) {
+#ifndef __SYNTHESIS__
 		printf("PC=%08X\n", pc);
 		printf("Executed %d instructions\n", insncnt);
 		for (int regid = 0; regid < 32; regid++) {
 			printf("%s[%d]=%08X\n", rname(regid), regid, x[regid]);
 		}
 		printf("End of program\n");
+#endif
 		return 0;
-	} else {
+    } else {
+#ifndef __SYNTHESIS__
 		printf("Program halted due to error after %d instructions\n", insncnt);
 		fprintf(stderr, "Program halted due to error after %d instructions\n",
 				insncnt);
 		for (int regid = 0; regid < 32; regid++) {
 			printf("%s[%d]=%08X\n", rname(regid), regid, x[regid]);
 		}
+#endif
 		return -1;
 	}
 //	fclose(stdout);
