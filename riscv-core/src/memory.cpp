@@ -1,4 +1,4 @@
-#include <riscv-nano-config.h>
+#include "riscv-nano-config.h"
 #if MEMSIZE<0x00000070 
 #error binary image does not fit memory 
 #endif

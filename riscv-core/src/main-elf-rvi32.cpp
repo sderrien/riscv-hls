@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ac_int.h>
-#include <riscv.h>
-#include <riscv-nano-config.h>
-#include <elf-loader.h>
+#include "riscv.h"
+#include "riscv-nano-config.h"
+#include "elf-loader.h"
 
 #pragma SHLS SPEC_DEPENDENCY variable=memw distance=4
 

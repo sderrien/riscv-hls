@@ -10,8 +10,8 @@
 
 #include <ac_int.h>
 
-#include <riscv.h>
-#include <riscv-nano-config.h>
+#include "riscv.h"
+#include "riscv-nano-config.h"
 
 struct decode_info decode(unsigned int ir);
 
