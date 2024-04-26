@@ -275,32 +275,3 @@ char* mnemonic(unsigned int ir) {
 	return buffer;
 }
 #endif
-
-int parse_args(int argc, char **argv) {
-	int res = 0;
-	FILE *tmp = stdout;
-	int nbopt = 0;
-
-	for (int k = 1; k < argc; k++) {
-		if (strcmp(argv[k], "-o") == 0) {
-			FILE *ofile = fopen(argv[k + 1], "w");
-			printf("Using output file %s\n", argv[k + 1]);
-			if (ofile == NULL) {
-				return -2;
-			}
-			stdout = ofile;
-			nbopt += 2;
-		}
-		if (strcmp(argv[k], "-bin") == 0) {
-			FILE *binfile = fopen(argv[k + 1], "r");
-			printf("Using binary file %s\n", argv[k + 1]);
-			if (binfile == NULL) {
-				return -2;
-			}
-			loadbinary(argv[k + 1]);
-			nbopt += 2;
-		}
-	}
-
-	return 0;
-}
