@@ -43,12 +43,6 @@ void trace_io(uint32_t addr, uint32_t value) {}
 #if MEMSIZE<0x00000070
 #error binary image does not fit memory
 #endif
-unsigned int memw[MEMSIZE / 4] = { 0 };
-unsigned char mem0[MEMSIZE / 4] = { 0 };
-unsigned char mem1[MEMSIZE / 4] = { 0 };
-unsigned char mem2[MEMSIZE / 4] = { 0 };
-unsigned char mem3[MEMSIZE / 4] = { 0 };
-
 uint32_t insncnt = 0;
 uint32_t x[32] = { 0, 0, 0, 0, 0 };
 uint32_t pc = 0, next_pc = 0;
@@ -125,7 +119,11 @@ unsigned short extract_half(uint32_t data, uint32_t offset) {
 }
 
 #pragma GCS_INLINE
-bool cpu_load_insn(struct decode_info dc) {
+bool cpu_load_insn(struct decode_info dc,
+		unsigned char mem0[MEMSIZE / 4],
+		unsigned char mem1[MEMSIZE / 4],
+		unsigned char mem2[MEMSIZE / 4],
+		unsigned char mem3[MEMSIZE / 4]) {
 	bool cpu_load_insn_valid = false;
 
 	uint32_t cpu_load_insn_addr;
@@ -176,7 +174,11 @@ bool cpu_load_insn(struct decode_info dc) {
 }
 
 #pragma GCS_INLINE
-bool cpu_store_insn(struct decode_info dc) {
+bool cpu_store_insn(struct decode_info dc,
+		unsigned char mem0[MEMSIZE / 4],
+		unsigned char mem1[MEMSIZE / 4],
+		unsigned char mem2[MEMSIZE / 4],
+		unsigned char mem3[MEMSIZE / 4]) {
 	bool cpu_store_insn_valid = false;
 	uint32_t cpu_store_insn_addr;
 	uint32_t cpu_store_insn_waddr;
@@ -247,7 +249,18 @@ bool cpu_store_insn(struct decode_info dc) {
 	return cpu_store_insn_valid;
 }
 
-uint32_t nano_cpu_run(uint32_t init_pc) {
+#pragma HLS bind_storage variable=x type=ran_1wnr
+#pragma HLS interface port=instr_mem mode=bram storage_type=ram_t2p
+#pragma HLS interface port=mem0 mode=bram storage_type=ram_t2p
+#pragma HLS interface port=mem1 mode=bram storage_type=ram_t2p
+#pragma HLS interface port=mem2 mode=bram storage_type=ram_t2p
+#pragma HLS interface port=mem3 mode=bram storage_type=ram_t2p
+uint32_t nano_cpu_run(uint32_t init_pc,
+		uint32_t instr_mem[MEMSIZE / 4],
+		unsigned char mem0[MEMSIZE / 4],
+		unsigned char mem1[MEMSIZE / 4],
+		unsigned char mem2[MEMSIZE / 4],
+		unsigned char mem3[MEMSIZE / 4]) {
 	uint32_t ir;
 	struct decode_info dc;
 	int simm_I;
@@ -276,7 +289,7 @@ uint32_t nano_cpu_run(uint32_t init_pc) {
 	do {
 		valid = false;
 		addr = addr32(pc);
-		ir = memw[addr];
+		ir = instr_mem[addr];
 		dc = decode(ir);
 
 		next_pc = pc + 4;
@@ -493,13 +506,14 @@ uint32_t nano_cpu_run(uint32_t init_pc) {
 #ifdef USE_ST
 		case RISCV_ST: {
 #ifdef BYTE_MEM
-			valid = cpu_store_insn(dc);
+			valid = cpu_store_insn(dc, mem0, mem1, mem2, mem3);
 #else
 		switch (dc.funct3) {
 		case RISCV_ST_SW:
 			addr = ((int) x[dc.rs1]) + (dc.simm_S);
 			offset = byte_offset(addr);
 			valid = (offset % 4) == 0;
+
 			memw[addr32(addr)] = x[dc.rs2];
 			break;
 		}
@@ -510,7 +524,7 @@ uint32_t nano_cpu_run(uint32_t init_pc) {
 #ifdef USE_LD
 		case RISCV_LD: {
 #ifdef BYTE_MEM
-			valid = cpu_load_insn(dc);
+			valid = cpu_load_insn(dc, mem0, mem1, mem2, mem3);
 #else
 		switch (dc.funct3) {
 		case RISCV_LD_LW:

@@ -15,6 +15,8 @@
 #define TARGET_ISA "RISCV_I32"
 #define BYTE_MEM
 
+#define __SYNTHESIS__
+
 #ifndef TARGET_ISA
 #error
 #define RISCV_FEMTO
